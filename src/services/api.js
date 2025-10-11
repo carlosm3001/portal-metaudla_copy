@@ -5,6 +5,7 @@
 
 import * as forumApi from './forum.dev.js';
 import * as projectActionsApi from './projects.dev.js';
+import { logActivity } from './activityLog.dev.js';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -25,6 +26,9 @@ export const login = async (credentials) => {
   
   // After login, get the full user session data
   const session = await getSession();
+  if (session && session.user) {
+    logActivity('login', { email: credentials.email }, session.user);
+  }
   return session;
 };
 
@@ -39,8 +43,11 @@ export const register = async (userData) => {
     throw new Error(errorData.message || 'Error de registro');
   }
   // After registering, log the user in to get a token and session
-  const { user } = await login({ email: userData.email, password: userData.password });
-  return { user };
+  const session = await login({ email: userData.email, password: userData.password });
+  if (session && session.user) {
+    logActivity('register', { email: userData.email }, session.user);
+  }
+  return { user: session.user };
 };
 
 export const logout = async () => {

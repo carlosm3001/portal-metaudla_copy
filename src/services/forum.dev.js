@@ -3,6 +3,8 @@ const KEY_POSTS   = "forum:posts";
 const read = (k)=> JSON.parse(localStorage.getItem(k) || "[]");
 const write = (k,v)=> localStorage.setItem(k, JSON.stringify(v));
 
+import { logActivity } from './activityLog.dev.js';
+
 // Seed initial data if empty
 (function seed() {
   if (read(KEY_THREADS).length === 0) {
@@ -67,6 +69,9 @@ export function createThread({title, category, firstContent, user}){
 
   write(KEY_THREADS, threads);
   write(KEY_POSTS, posts);
+
+  logActivity('create_thread', { threadId: newThread.id, title: newThread.title }, user);
+
   return newThread;
 }
 
@@ -81,5 +86,8 @@ export function replyThread({threadId, content, user}){
     t.lastActivityAt = Date.now();
     write(KEY_THREADS, threads);
   }
+
+  logActivity('reply_thread', { threadId, postId: p.id }, user);
+
   return p;
 }

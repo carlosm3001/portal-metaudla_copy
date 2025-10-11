@@ -2,6 +2,8 @@ const KEY_ACTIONS = "projects:actions";
 const read = (k)=> JSON.parse(localStorage.getItem(k) || "[]");
 const write = (k,v)=> localStorage.setItem(k, JSON.stringify(v));
 
+import { logActivity } from './activityLog.dev.js';
+
 // Seed initial data if empty
 (function seed() {
   if (read(KEY_ACTIONS).length === 0) {
@@ -23,6 +25,9 @@ export function addComment({projectId, content, user}){
   const arr = read(KEY_ACTIONS); 
   arr.push(a); 
   write(KEY_ACTIONS, arr); 
+
+  logActivity('comment_project', { projectId, content }, user);
+
   return a;
 }
 
@@ -36,5 +41,8 @@ export function addVote({projectId, user}){
   const a = { id: crypto.randomUUID(), projectId, authorId:user.id, authorName: user.name, type:"vote", createdAt:Date.now() };
   arr.push(a); 
   write(KEY_ACTIONS, arr); 
+
+  logActivity('vote_project', { projectId }, user);
+
   return a;
 }

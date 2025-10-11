@@ -4,20 +4,26 @@ import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
 import ProjectCard from '../components/admin/ProjectCard';
 import RightPanelTabs from '../components/admin/RightPanelTabs';
+import { listUsersUnified, setUserRoleUnified, toggleUserActiveUnified } from "@/services/users.unified";
+import { listLogsUnified, formatDateSafe, actionBadge, actionIcon } from "@/services/activityLog.unified";
+import { extractEmailFromDetails, formatAuditDate } from "@/utils/audit.jsx";
+import { useAuth } from '../context/AuthContext';
 
 function Admin({ isLoggedIn, userRole }) {
+  const { user } = useAuth();
   // Estados para datos
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
-  const [auditLogs, setAuditLogs] = useState([]);
+  const [tab, setTab] = React.useState("activity"); // 'activity' | 'users'
+  const [logs, setLogs] = React.useState(null);
+  const [q, setQ] = React.useState(""); // búsqueda
+  const [userFilter, setUserFilter] = React.useState(null); // email para filtrar actividad
 
   // Estados de carga y error
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
-  const [auditLoading, setAuditLoading] = useState(true);
   const [error, setError] = useState(null);
   const [usersError, setUsersError] = useState(null);
-  const [auditError, setAuditError] = useState(null);
 
   // Estado para el modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,15 +58,7 @@ function Admin({ isLoggedIn, userRole }) {
     finally { setUsersLoading(false); }
   }, [getAuthHeaders]);
 
-  const fetchAuditLogs = useCallback(async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/audit', { headers: getAuthHeaders() });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setAuditLogs(data);
-    } catch (_) { setAuditError('Error al cargar auditoría.'); } 
-    finally { setAuditLoading(false); }
-  }, [getAuthHeaders]);
+
 
   useEffect(() => {
     if (!isLoggedIn || userRole !== 'admin') {
@@ -69,8 +67,34 @@ function Admin({ isLoggedIn, userRole }) {
     }
     fetchProjects();
     fetchUsers();
-    fetchAuditLogs();
-  }, [isLoggedIn, userRole, navigate, fetchProjects, fetchUsers, fetchAuditLogs]);
+  }, [isLoggedIn, userRole, navigate, fetchProjects, fetchUsers]);
+
+  React.useEffect(() => {
+    (async () => {
+      const us = await listUsersUnified();
+      setUsers(us);
+      const lg = await listLogsUnified(100);
+      setLogs(lg);
+    })();
+  }, []);
+
+  const filteredUsers = React.useMemo(() => {
+    if (!users) return null;
+    if (!q) return users;
+    const s = q.toLowerCase();
+    return users.filter(u =>
+      (u.email || "").toLowerCase().includes(s) ||
+      (u.display_name || "").toLowerCase().includes(s)
+    );
+  }, [users, q]);
+
+  const logsByUser = React.useMemo(() => {
+    if (!logs) return null;
+    if (!userFilter) return logs;
+    return logs.filter(l =>
+      (l.user || "").toLowerCase() === userFilter.toLowerCase()
+    );
+  }, [logs, userFilter]);
 
   const handleSaveProject = async (formData) => {
     try {
@@ -80,6 +104,9 @@ function Admin({ isLoggedIn, userRole }) {
         : 'http://localhost:3001/api/projects';
       const response = await fetch(url, { method, headers: getAuthHeaders(), body: formData });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const action = formData.get('id') ? 'edit_project' : 'create_project';
+
       setIsModalOpen(false);
       fetchProjects(); // Recargar proyectos
     } catch (err) {
@@ -91,6 +118,7 @@ function Admin({ isLoggedIn, userRole }) {
     if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
       try {
         await fetch(`http://localhost:3001/api/projects/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+
         fetchProjects(); // Recargar
       } catch (err) { setError('Error al eliminar el proyecto.'); }
     }
@@ -100,6 +128,7 @@ function Admin({ isLoggedIn, userRole }) {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
         await fetch(`http://localhost:3001/api/users/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+
         fetchUsers(); // Recargar
       } catch (err) { setUsersError('Error al eliminar el usuario.'); }
     }
@@ -131,7 +160,7 @@ function Admin({ isLoggedIn, userRole }) {
       return a.name.localeCompare(b.name);
     });
 
-  if (loading || usersLoading || auditLoading) {
+  if (loading || usersLoading || logs === null) {
     return (
       <main className="container mx-auto max-w-7xl px-4 py-8">
         {/* Skeleton state */}
@@ -202,21 +231,184 @@ function Admin({ isLoggedIn, userRole }) {
             )}
           </section>
 
-          {/* Columna Derecha: Paneles de Actividad y Usuarios */}
-          <aside className="lg:col-span-9">
-            <div className="lg:sticky lg:top-20">
-              <RightPanelTabs
-                auditLogs={auditLogs}
-                users={users}
-                onDeleteUser={handleDeleteUser}
-                auditLoading={auditLoading}
-                usersLoading={usersLoading}
-                auditError={auditError}
-                usersError={usersError}
-              />
-            </div>
-          </aside>
-        </div>
+                    {/* Columna Derecha: Paneles de Actividad y Usuarios */}
+                    <div className="lg:col-span-9">
+                      <div className="flex gap-2 mb-4">
+                        <button
+                          className={`pill ${tab === "activity" ? "bg-brand-100 text-brand-700" : ""}`}
+                          onClick={() => setTab("activity")}
+                        >
+                          Registro de Actividad
+                        </button>
+                        <button
+                          className={`pill ${tab === "users" ? "bg-brand-100 text-brand-700" : ""}`}
+                          onClick={() => setTab("users")}
+                        >
+                          Gestión de Usuarios
+                        </button>
+                      </div>
+          
+                      {tab === "users" ? (
+                        <section className="card p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-ink font-bold">Gestión de Usuarios</h2>
+                            <input
+                              value={q}
+                              onChange={(e) => setQ(e.target.value)}
+                              placeholder="Buscar por email o nombre…"
+                              className="input w-[320px]"
+                            />
+                          </div>
+          
+                          {filteredUsers === null ? (
+                            <div className="py-12 text-center text-muted">Cargando usuarios…</div>
+                          ) : filteredUsers.length === 0 ? (
+                            <div className="py-12 text-center text-muted">
+                              No hay usuarios que coincidan.
+                            </div>
+                          ) : (
+                            <div className="overflow-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="text-ink font-semibold border-b">
+                                    <th className="py-2 text-left">Email</th>
+                                    <th className="text-left">Nombre</th>
+                                    <th className="text-left">Rol</th>
+                                    <th className="text-left">Estado</th>
+                                    <th className="text-left">Última vez</th>
+                                    <th className="text-left">Acciones</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {filteredUsers.map((u) => (
+                                    <tr
+                                      key={u.id || u.email}
+                                      className="border-b hover:bg-brand-50/50"
+                                    >
+                                      <td className="py-2">
+                                        <button className="link" onClick={() => setUserFilter(u.email)}>
+                                          {u.email}
+                                        </button>
+                                      </td>
+                                      <td>{u.display_name || "—"}</td>
+                                      <td>
+                                        <select
+                                          className="input input-sm"
+                                          defaultValue={u.role || "user"}
+                                          onChange={async (e) => {
+                                            await setUserRoleUnified(u.email, e.target.value);
+                                            setUsers((prev) =>
+                                              prev.map((p) =>
+                                                p.email === u.email
+                                                  ? { ...p, role: e.target.value }
+                                                  : p
+                                              )
+                                            );
+                                          }}
+                                        >
+                                          <option value="user">user</option>
+                                          <option value="admin">admin</option>
+                                        </select>
+                                      </td>
+                                      <td>
+                                        <label className="inline-flex items-center gap-2">
+                                          <input
+                                            type="checkbox"
+                                            defaultChecked={u.is_active !== false}
+                                            onChange={async (e) => {
+                                              await toggleUserActiveUnified(
+                                                u.email,
+                                                e.target.checked
+                                              );
+                                              setUsers((prev) =>
+                                                prev.map((p) =>
+                                                  p.email === u.email
+                                                    ? { ...p, is_active: e.target.checked }
+                                                    : p
+                                                )
+                                              );
+                                            }}
+                                          />
+                                          <span className="pill pill-sm">
+                                            {u.is_active !== false ? "activo" : "inactivo"}
+                                          </span>
+                                        </label>
+                                      </td>
+                                      <td>{formatDateSafe(u.last_seen_at || u.created_at)}</td>
+                                      <td>
+                                        <button
+                                          className="btn btn-sm"
+                                          onClick={() => setUserFilter(u.email)}
+                                        >
+                                          Ver actividad
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </section>
+                      ) : (
+                        <section className="card p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-ink font-bold">Registro de Actividad</h2>
+                            <div className="flex items-center gap-2">
+                              <input
+                                value={userFilter || ""}
+                                onChange={(e) => setUserFilter(e.target.value || null)}
+                                placeholder="Filtrar por email…"
+                                className="input w-[280px]"
+                              />
+                              {userFilter && (
+                                <button className="btn btn-sm" onClick={() => setUserFilter(null)}>
+                                  Quitar filtro
+                                </button>
+                              )}
+                            </div>
+                          </div>
+          
+                          {logsByUser === null ? (
+                            <div className="py-12 text-center text-muted">Cargando registros…</div>
+                          ) : logsByUser.length === 0 ? (
+                            <div className="py-12 text-center text-muted">
+                              No hay actividad registrada.
+                            </div>
+                          ) : (
+                            <div className="overflow-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="text-ink font-semibold border-b">
+                                    <th className="py-2 text-left">Usuario</th>
+                                    <th className="text-left">Acción</th>
+                                    <th className="text-left">Detalles</th>
+                                    <th className="text-left">Fecha</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {logsByUser.map((l) => (
+                                    <tr key={l.id} className="border-b hover:bg-brand-50/50">
+                                      <td className="py-2">{l.user}</td>
+                                      <td>
+                                        <span className={actionBadge(l.action)}>
+                                          <span className="mr-1">{actionIcon(l.action)}</span>
+                                          {l.action}
+                                        </span>
+                                      </td>
+                                      <td className="max-w-[420px] truncate">
+                                        {renderDetails(l.details)}
+                                      </td>
+                                      <td>{formatDateSafe(l.iso)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </section>
+                      )}
+                    </div>        </div>
 
         {/* Modal para crear/editar proyecto */}
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingProject ? 'Editar Proyecto' : 'Añadir Nuevo Proyecto'}>
@@ -229,6 +421,16 @@ function Admin({ isLoggedIn, userRole }) {
       </main>
     </div>
   );
+}
+
+function renderDetails(details) {
+  if (!details) return "—";
+  if (typeof details === "string") return details;
+  try {
+    return JSON.stringify(details);
+  } catch {
+    return String(details);
+  }
 }
 
 export default Admin;
