@@ -160,12 +160,11 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
               </div>
 
               <label className="label">Tecnologías</label>
-              <div className="p-3 border border-border rounded-xl bg-bg flex flex-wrap gap-2">
+              <div key="tech-options-container" className="p-3 border border-border rounded-xl bg-bg flex flex-wrap gap-2">
                 {availableTechnologies.map(tech => (
                   <TechChipOption
                     key={tech.id}
-                    t={tech.nombre}
-                    active={selectedTechnologies.includes(tech.nombre)}
+                    tech={tech}
                     onToggle={toggleTech}
                   />
                 ))}

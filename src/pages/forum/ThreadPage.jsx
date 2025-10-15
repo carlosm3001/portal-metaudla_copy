@@ -1,44 +1,80 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getThread, listPosts, replyThread } from "../../services/api";
+import { getThread, replyThread } from "../../services/api";
 import { useEffect, useState } from "react";
 import { timeAgo } from "../../utils/time";
 
 export default function ThreadPage(){
   const { id } = useParams();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, token } = useAuth();
   const nav = useNavigate();
   const [thread, setThread] = useState(null);
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(()=> {
-    const threadData = getThread(id);
-    if (threadData) {
-      setThread(threadData);
-      setPosts(listPosts(id));
-    } 
+    const fetchThreadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getThread(id);
+        setThread(data.thread);
+        setPosts(data.posts);
+      } catch (err) {
+        setError('No se pudo cargar el hilo del foro.');
+        console.error('Error fetching thread:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchThreadData();
   }, [id]);
 
-  const handleReply = (e) => {
+  const handleReply = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) return nav(`/login`, { state:{ from: `/foro/hilo/${id}` }});
     if (!content.trim()) return;
     
     setIsSubmitting(true);
     try {
-      replyThread({ threadId:id, content, user });
+      await replyThread(id, { content, user, token });
       setContent("");
       // Refresh posts and thread data to show the new reply and updated counts
-      setPosts(listPosts(id));
-      setThread(getThread(id));
+      const data = await getThread(id);
+      setThread(data.thread);
+      setPosts(data.posts);
     } catch (error) {
+      setError(error.message || 'Error al publicar la respuesta.');
       console.error("Failed to reply:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <main className="container mx-auto max-w-[900px] px-6 py-10">
+        <div className="bg-white rounded-lg shadow-md p-8 animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
+          <div className="h-4 bg-gray-200 rounded mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="container mx-auto max-w-[900px] px-6 py-10">
+        <div className="card bg-danger/10 text-danger text-center p-6">{error}</div>
+      </main>
+    );
+  }
 
   if (!thread) return <main className="container mx-auto max-w-[900px] px-6 py-10">Hilo no encontrado.</main>;
 
@@ -72,7 +108,7 @@ export default function ThreadPage(){
             value={content} 
             onChange={e=>setContent(e.target.value)} 
             placeholder="Escribe tu respuesta..." 
-            disabled={!isLoggedIn}
+            disabled={!isLoggedIn || isSubmitting}
           />
           <div className="flex justify-end">
             <button type="submit" className="btn btn-primary" disabled={!isLoggedIn || isSubmitting}>

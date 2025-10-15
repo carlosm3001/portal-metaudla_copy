@@ -3,7 +3,6 @@
  * This file provides functions to interact with the backend API.
  */
 
-import * as forumApi from './forum.dev.js';
 import * as projectActionsApi from './projects.dev.js';
 import { logActivity } from './activityLog.dev.js';
 
@@ -76,11 +75,103 @@ export const getSession = async () => {
 
 
 // --- Forum API -----------------------------------------------------------------
-export const listThreads = forumApi.listThreads;
-export const getThread = forumApi.getThread;
-export const listPosts = forumApi.listPosts;
-export const createThread = forumApi.createThread;
-export const replyThread = forumApi.replyThread;
+export const listThreads = async (filters = {}, user) => {
+  const params = new URLSearchParams();
+  if (filters.category) params.append('category', filters.category);
+  // Backend will handle onlyMine and onlyRepliedBy based on authenticated user
+  // For now, these filters are not directly passed as query params to backend
+
+  const response = await fetch(`${API_URL}/forum/threads?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error('Error al obtener los hilos del foro');
+  }
+  const data = await response.json();
+  // Map backend data to frontend expected format if necessary
+  return data.map(thread => ({
+    id: thread.id,
+    title: thread.title,
+    category: thread.category,
+    authorName: thread.author_email,
+    lastActivityAt: thread.last_activity_at,
+    replies: thread.replies_count,
+    authorId: thread.author_id,
+  }));
+};
+
+export const getThread = async (threadId) => {
+  const response = await fetch(`${API_URL}/forum/threads/${threadId}`);
+  if (!response.ok) {
+    throw new Error('Error al obtener el hilo del foro');
+  }
+  const data = await response.json();
+  return {
+    thread: {
+      id: data.thread.id,
+      title: data.thread.title,
+      category: data.thread.category,
+      authorName: data.thread.author_email,
+      lastActivityAt: data.thread.last_activity_at,
+      replies: data.thread.replies_count,
+      authorId: data.thread.author_id,
+      firstContent: data.posts[0] ? data.posts[0].content : '', // Assuming first post is initial content
+    },
+    posts: data.posts.map(post => ({
+      id: post.id,
+      authorName: post.author_email,
+      content: post.content,
+      createdAt: post.created_at,
+      authorId: post.author_id,
+    })),
+  };
+};
+
+export const createThread = async ({ title, category, firstContent, user, token }) => {
+  const response = await fetch(`${API_URL}/forum/threads`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ title, category, firstContent }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear el hilo');
+  }
+  const data = await response.json();
+  return {
+    id: data.id,
+    title: data.title,
+    category: data.category,
+    authorName: user.email,
+    lastActivityAt: new Date().toISOString(),
+    replies: 0,
+    authorId: user.id,
+  };
+};
+
+export const replyThread = async (threadId, { content, user, token }) => {
+  const response = await fetch(`${API_URL}/forum/threads/${threadId}/posts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al responder al hilo');
+  }
+  const data = await response.json();
+  return {
+    id: data.id,
+    authorName: user.email,
+    content: data.content,
+    createdAt: new Date().toISOString(),
+    authorId: user.id,
+  };
+};
 
 // --- Project Actions (Votes, Comments) -----------------------------------------
 export const listActions = projectActionsApi.listActions;

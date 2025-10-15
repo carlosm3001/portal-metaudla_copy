@@ -204,6 +204,13 @@ footer nav a:hover {
 }
 .pill-sm{ font-size:.75rem; }
 
+.active-tech-chip {
+  background:var(--brand-200);
+  color:var(--brand-800);
+  border-color:var(--brand-400);
+  box-shadow:0 0 0 2px var(--brand-200);
+}
+
 /* Desvanecido de lista de tecnologías (máx 2 filas) */
 .fade-bottom{
   position:absolute; left:0; right:0; bottom:0; height:18px;

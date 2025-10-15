@@ -17,6 +17,12 @@ import Nosotros from './pages/Nosotros';
 import Foro from './pages/Foro';
 import NewThread from './pages/forum/NewThread';
 import ThreadPage from './pages/forum/ThreadPage';
+import Blog from './pages/Blog';
+import BlogPostDetail from './pages/BlogPostDetail';
+import NewBlogPost from './pages/NewBlogPost';
+import News from './pages/News';
+import NewsDetail from './pages/NewsDetail';
+import NewNews from './pages/NewNews';
 
 // Auth
 import { useAuth } from './context/AuthContext';
@@ -46,6 +52,10 @@ function App() {
         <Route path="nosotros" element={<Nosotros />} />
         <Route path="foro" element={<Foro />} />
         <Route path="foro/hilo/:id" element={<ThreadPage />} />
+        <Route path="blog" element={<Blog />} />
+        <Route path="blog/:id" element={<BlogPostDetail />} />
+        <Route path="news" element={<News />} />
+        <Route path="news/:id" element={<NewsDetail />} />
         
         {/* Auth Routes that should only be accessible when logged out */}
         <Route path="login" element={<Login />} />
@@ -57,6 +67,12 @@ function App() {
         } />
         <Route path="foro/nuevo" element={
           <ProtectedRoute><NewThread /></ProtectedRoute>
+        } />
+        <Route path="blog/new" element={
+          <ProtectedRoute><NewBlogPost /></ProtectedRoute>
+        } />
+        <Route path="news/new" element={
+          <ProtectedRoute><NewNews /></ProtectedRoute>
         } />
         <Route path="admin" element={
           <ProtectedRoute>

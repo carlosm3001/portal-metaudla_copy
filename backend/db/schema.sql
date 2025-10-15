@@ -3,8 +3,12 @@
 -- ====================================================================
 DROP TABLE IF EXISTS proyecto_imagenes;
 DROP TABLE IF EXISTS proyectos_tecnologias;
-DROP TABLE IF EXISTS calificaciones;
 DROP TABLE IF EXISTS comentarios;
+DROP TABLE IF EXISTS calificaciones;
+DROP TABLE IF EXISTS blog_posts;
+DROP TABLE IF EXISTS noticias;
+DROP TABLE IF EXISTS forum_posts;
+DROP TABLE IF EXISTS forum_threads;
 DROP TABLE IF EXISTS auditoria_acciones;
 DROP TABLE IF EXISTS proyectos;
 DROP TABLE IF EXISTS tecnologias;
@@ -43,6 +47,8 @@ CREATE TABLE IF NOT EXISTS proyectos (
     websiteUrl VARCHAR(255),
     categoria_id INT,
     participantes TEXT,
+    semestre INT,
+    dificultad ENUM('Principiante', 'Intermedio', 'Avanzado'),
     likes INT DEFAULT 0,
     dislikes INT DEFAULT 0,
     vistas INT DEFAULT 0,
@@ -86,6 +92,46 @@ CREATE TABLE IF NOT EXISTS calificaciones (
     usuario_id INT,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_proyecto_usuario (proyecto_id, usuario_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    contenido TEXT NOT NULL,
+    tema VARCHAR(191),
+    autor_id INT NOT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS noticias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    contenido TEXT NOT NULL,
+    autor_id INT NOT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS forum_threads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(191),
+    author_id INT NOT NULL,
+    created_at DATETIME,
+    last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    replies_count INT DEFAULT 0,
+    FOREIGN KEY (author_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS forum_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    thread_id INT NOT NULL,
+    author_id INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (thread_id) REFERENCES forum_threads(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

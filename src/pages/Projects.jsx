@@ -1,20 +1,60 @@
-import { useEffect, useMemo, useState } from "react";
-import ProjectCard from "../components/projects/ProjectCard"; // New path
-import ProjectSkeleton from "../components/projects/ProjectSkeleton"; // New component
+import { useEffect, useState } from "react";
+import ProjectCard from "../components/projects/ProjectCard";
+import ProjectSkeleton from "../components/projects/ProjectSkeleton";
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [technologies, setTechnologies] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("");
+  const [selectedTechnology, setSelectedTechnology] = useState("");
 
-  const [query, setQuery] = useState("");
-  const [activeTag, setActiveTag] = useState("Todas");
+  const semesters = Array.from({ length: 10 }, (_, i) => i + 1);
+  const difficulties = ["Principiante", "Intermedio", "Avanzado"];
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const [categoriesRes, technologiesRes] = await Promise.all([
+          fetch('http://localhost:3001/api/categories'),
+          fetch('http://localhost:3001/api/technologies'),
+        ]);
+
+        const categoriesData = await categoriesRes.json();
+        const technologiesData = await technologiesRes.json();
+
+        setCategories(categoriesData);
+        setTechnologies(technologiesData);
+      } catch (err) {
+        console.error("Error fetching filters:", err);
+        // Optionally set an error state for filters
+      }
+    };
+    fetchFilters();
+  }, []);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/projects');
+        setError(null);
+
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('q', searchTerm);
+        if (selectedCategory) params.append('categoria_id', selectedCategory);
+        if (selectedSemester) params.append('semestre', selectedSemester);
+        if (selectedDifficulty) params.append('dificultad', selectedDifficulty);
+        // Note: The backend currently filters by technology name if 'q' is used. 
+        // If a dedicated technology filter is needed, the backend API needs adjustment.
+        // For now, we'll rely on 'q' for technology search if the user types it.
+
+        const url = `http://localhost:3001/api/projects?${params.toString()}`;
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setProjects(data);
@@ -25,26 +65,7 @@ export default function Projects() {
       }
     };
     fetchProjects();
-  }, []);
-
-  const tags = useMemo(() => {
-    if (projects.length === 0) return [];
-    const allTechs = projects.flatMap(p => p.technologies ? p.technologies.split(',').map(t => t.trim()) : []);
-    return [...new Set(allTechs)].sort();
-  }, [projects]);
-
-  const filteredProjects = useMemo(() => {
-    const searchTerm = query.toLowerCase();
-    return projects.filter(p => {
-      const hasTag = activeTag === "Todas" || (p.technologies || '').toLowerCase().includes(activeTag.toLowerCase());
-      const matchesSearch = searchTerm === '' || 
-        p.name.toLowerCase().includes(searchTerm) || 
-        p.description.toLowerCase().includes(searchTerm) ||
-        (p.author || '').toLowerCase().includes(searchTerm) || // Assuming author field exists
-        (p.technologies || '').toLowerCase().includes(searchTerm);
-      return hasTag && matchesSearch;
-    });
-  }, [query, activeTag, projects]);
+  }, [searchTerm, selectedCategory, selectedSemester, selectedDifficulty]);
 
   if (error) {
     return (
@@ -62,29 +83,66 @@ export default function Projects() {
         <p className="text-muted">Explora y descubre miniproyectos de la comunidad.</p>
       </header>
 
-      {/* Toolbar: chips + búsqueda */}
+      {/* Toolbar: filtros + búsqueda */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-5">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveTag("Todas")}
-            className={`chip ${activeTag === "Todas" ? "chip-active" : ""}`}
-          >Todas</button>
-          {tags.map(t => (
-            <button
-              key={t}
-              onClick={() => setActiveTag(t)}
-              className={`chip ${activeTag === t ? "chip-active" : ""}`}
-            >{t}</button>
-          ))}
-        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Search Input */}
+          <div className="w-full lg:w-[320px]">
+            <input
+              className="input w-full h-10"
+              placeholder="Buscar por nombre, descripción..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-        <div className="w-full lg:w-[320px]">
-          <input
-            className="input w-full h-10"
-            placeholder="Buscar por nombre, autor o tecnología…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
+          {/* Category Filter */}
+          <select
+            className="select h-10"
+            value={selectedCategory}
+            onChange={e => setSelectedCategory(e.target.value)}
+          >
+            <option value="">Todas las Categorías</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.nombre}
+              </option>
+            ))}
+          </select>
+
+          {/* Semester Filter */}
+          <select
+            className="select h-10"
+            value={selectedSemester}
+            onChange={e => setSelectedSemester(e.target.value)}
+          >
+            <option value="">Todos los Semestres</option>
+            {semesters.map(sem => (
+              <option key={sem} value={sem}>
+                Semestre {sem}
+              </option>
+            ))}
+          </select>
+
+          {/* Difficulty Filter */}
+          <select
+            className="select h-10"
+            value={selectedDifficulty}
+            onChange={e => setSelectedDifficulty(e.target.value)}
+          >
+            <option value="">Todas las Dificultades</option>
+            {difficulties.map(diff => (
+              <option key={diff} value={diff}>
+                {diff}
+              </option>
+            ))}
+          </select>
+
+          {/* Technology Filter (using 'q' for now, can be enhanced) */}
+          {/* Re-evaluating the technology filter: The backend currently searches technology names via 'q'.
+              If a dedicated technology filter is desired, the backend API needs to be updated to accept a 'technology_id' or 'technology_name' parameter.
+              For now, the 'q' parameter can be used for searching technologies as well if the user types the technology name.
+              Keeping this as a placeholder for future enhancement if needed. */}
         </div>
       </div>
 
@@ -96,12 +154,12 @@ export default function Projects() {
         >
           {Array.from({ length: 8 }).map((_, i) => <ProjectSkeleton key={i} />)}
         </section>
-      ) : filteredProjects.length > 0 ? (
+      ) : projects.length > 0 ? (
         <section
           className="grid gap-5"
           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
         >
-          {filteredProjects.map(p => <ProjectCard key={p.id} project={p} />)}
+          {projects.map(p => <ProjectCard key={p.id} project={p} />)}
         </section>
       ) : (
         <div className="text-center py-16">

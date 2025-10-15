@@ -8,21 +8,36 @@ import { timeAgo } from '../utils/time';
 const CATEGORIES = ["Anuncios","Colaboración","Dudas técnicas"];
 
 export default function Foro(){
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, token } = useAuth();
   const nav = useNavigate();
   const [sp, setSp] = useSearchParams();
   const cat = sp.get("cat") || "";
   const tab = sp.get("tab") || "all";
   const [open, setOpen] = useState(false);
   const [threads, setThreads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const filters = {
-      category: cat || undefined,
-      onlyMine: tab === "mine",
-      onlyRepliedBy: tab === "replied",
+    const fetchThreads = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const filters = {
+          category: cat || undefined,
+          onlyMine: tab === "mine",
+          onlyRepliedBy: tab === "replied",
+        };
+        const fetchedThreads = await api.listThreads(filters, user);
+        setThreads(fetchedThreads);
+      } catch (err) {
+        setError('No se pudieron cargar los hilos del foro.');
+        console.error('Error fetching forum threads:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-    setThreads(api.listThreads(filters, user));
+    fetchThreads();
   }, [cat, tab, user]);
 
   const applyFilter = (k,v)=> {
@@ -36,17 +51,32 @@ export default function Foro(){
     setOpen(true);
   };
 
-  const handleSubmitThread = ({ title, category, firstContent }) => {
-    const t = api.createThread({ title, category, firstContent, user });
-    setOpen(false);
-    // Refresh threads list
-    setThreads(api.listThreads({
-      category: cat || undefined,
-      onlyMine: tab === "mine",
-      onlyRepliedBy: tab === "replied",
-    }, user));
-    nav(`/foro/hilo/${t.id}`);
+  const handleSubmitThread = async ({ title, category, firstContent }) => {
+    try {
+      const t = await api.createThread({ title, category, firstContent, user, token });
+      setOpen(false);
+      // Refresh threads list
+      const filters = {
+        category: cat || undefined,
+        onlyMine: tab === "mine",
+        onlyRepliedBy: tab === "replied",
+      };
+      const fetchedThreads = await api.listThreads(filters, user);
+      setThreads(fetchedThreads);
+      nav(`/foro/hilo/${t.id}`);
+    } catch (err) {
+      setError(err.message || 'Error al crear el hilo.');
+      console.error('Error creating thread:', err);
+    }
   };
+
+  if (error) {
+    return (
+      <main className="container mx-auto max-w-[1200px] px-6 py-10">
+        <div className="card bg-danger/10 text-danger text-center p-6">{error}</div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto max-w-[1200px] px-6 py-10">
@@ -91,21 +121,36 @@ export default function Foro(){
             </div>
           </div>
 
-          <div className="divide-y divide-[var(--border)]">
-            {threads.map(t => (
-              <article key={t.id} className="py-3 flex items-center justify-between hover:bg-brand-50/50 rounded-lg px-2 cursor-pointer"
-                       onClick={()=> nav(`/foro/hilo/${t.id}`)}>
-                <div className="min-w-0">
-                  <div className="font-semibold text-ink truncate">{t.title}</div>
-                  <div className="text-sm text-muted">
-                    En <span className="pill pill-sm">{t.category}</span> · por {t.authorName} · {timeAgo(t.lastActivityAt)}
+          {loading ? (
+            <div className="divide-y divide-[var(--border)]">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="py-3 flex items-center justify-between animate-pulse">
+                  <div className="min-w-0 flex-1 pr-4">
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                   </div>
+                  <div className="h-4 bg-gray-200 rounded w-16"></div>
                 </div>
-                <div className="text-sm text-ink/70">{t.replies} respuestas</div>
-              </article>
-            ))}
-            {threads.length === 0 && <div className="py-8 text-center text-muted">No hay hilos para este filtro.</div>}
-          </div>
+              ))}
+            </div>
+          ) : threads.length > 0 ? (
+            <div className="divide-y divide-[var(--border)]">
+              {threads.map(t => (
+                <article key={t.id} className="py-3 flex items-center justify-between hover:bg-brand-50/50 rounded-lg px-2 cursor-pointer"
+                         onClick={()=> nav(`/foro/hilo/${t.id}`)}>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-ink truncate">{t.title}</div>
+                    <div className="text-sm text-muted">
+                      En <span className="pill pill-sm">{t.category}</span> · por {t.authorName} · {timeAgo(t.lastActivityAt)}
+                    </div>
+                  </div>
+                  <div className="text-sm text-ink/70">{t.replies} respuestas</div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted">No hay hilos para este filtro.</div>
+          )}
         </section>
       </div>
 

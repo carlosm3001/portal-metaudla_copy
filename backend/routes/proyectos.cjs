@@ -20,15 +20,20 @@ async function handleTechnologies(connection, projectId, technologiesStr) {
   if (!technologiesStr || !technologiesStr.trim()) return;
   const techNames = technologiesStr.split(',').map(t => t.trim()).filter(t => t);
   for (const name of techNames) {
-    let [rows] = await connection.query('SELECT id FROM tecnologias WHERE nombre = ?', [name]);
-    let techId;
-    if (rows.length > 0) {
-      techId = rows[0].id;
-    } else {
-      const [result] = await connection.query('INSERT INTO tecnologias (nombre) VALUES (?)', [name]);
-      techId = result.insertId;
+    try {
+      let [rows] = await connection.query('SELECT id FROM tecnologias WHERE nombre = ?', [name]);
+      let techId;
+      if (rows.length > 0) {
+        techId = rows[0].id;
+      } else {
+        const [result] = await connection.query('INSERT INTO tecnologias (nombre) VALUES (?)', [name]);
+        techId = result.insertId;
+      }
+      await connection.query('INSERT INTO proyectos_tecnologias (proyecto_id, tecnologia_id) VALUES (?, ?)', [projectId, techId]);
+    } catch (error) {
+      console.error(`Error handling technology '${name}' for project ${projectId}:`, error.message);
+      throw error; // Re-throw to trigger transaction rollback
     }
-    await connection.query('INSERT INTO proyectos_tecnologias (proyecto_id, tecnologia_id) VALUES (?, ?)', [projectId, techId]);
   }
 }
 
@@ -49,11 +54,37 @@ const baseSelectQuery = `
 // GET all projects
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query(`${baseSelectQuery} GROUP BY p.id ORDER BY p.creado_en DESC`);
+    const { q, categoria_id, semestre, dificultad } = req.query;
+    let sql = 'SELECT p.*, c.nombre as categoria_nombre FROM proyectos p LEFT JOIN categorias c ON p.categoria_id = c.id';
+    const conditions = [];
+    const params = [];
+
+    if (q) {
+      conditions.push('(p.nombre LIKE ? OR p.descripcion LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`);
+    }
+    if (categoria_id) {
+      conditions.push('p.categoria_id = ?');
+      params.push(categoria_id);
+    }
+    if (semestre) {
+      conditions.push('p.semestre = ?');
+      params.push(semestre);
+    }
+    if (dificultad) {
+      conditions.push('p.dificultad = ?');
+      params.push(dificultad);
+    }
+
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching projects:', error);
-    res.status(500).json({ message: 'Error al obtener proyectos' });
+    console.error('Error al obtener proyectos:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 });
 
