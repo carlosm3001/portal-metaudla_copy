@@ -36,9 +36,7 @@ router.post('/', auth, async (req, res) => {
     const { titulo, contenido, tema } = req.body;
     const autor_id = req.user.id; // Assuming auth middleware adds user info to req
 
-    if (req.user.rol !== 'student' && req.user.rol !== 'admin') {
-      return res.status(403).json({ message: 'Acceso denegado. Solo estudiantes o administradores pueden crear publicaciones de blog.' });
-    }
+
 
     if (!titulo || !contenido) {
       return res.status(400).json({ message: 'Título y contenido son requeridos' });

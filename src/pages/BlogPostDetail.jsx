@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function BlogPostDetail() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, token } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBlogPost = async () => {
@@ -23,6 +26,24 @@ export default function BlogPostDetail() {
     };
     fetchBlogPost();
   }, [id]);
+
+  const handleDelete = async () => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+      try {
+        const response = await fetch(`http://localhost:3001/api/blog/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error('Error al eliminar la publicación.');
+        alert('Publicación eliminada exitosamente.');
+        navigate('/blog');
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+  };
+
+  const canManage = user && (user.id === post?.autor_id || user.rol === 'admin');
 
   if (loading) {
     return (
@@ -61,11 +82,21 @@ export default function BlogPostDetail() {
   return (
     <main className="container mx-auto max-w-[800px] px-4 md:px-6 py-10">
       <article className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-4xl font-extrabold text-ink mb-3">{post.titulo}</h1>
-        <p className="text-muted text-sm mb-6">
-          Por <span className="font-medium">{post.autor_email}</span> el {new Date(post.creado_en).toLocaleDateString()}
-          {post.tema && <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">{post.tema}</span>}
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-extrabold text-ink mb-3">{post.titulo}</h1>
+            <p className="text-muted text-sm mb-6">
+              Por <span className="font-medium">{post.autor_email}</span> el {new Date(post.creado_en).toLocaleDateString()}
+              {post.tema && <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">{post.tema}</span>}
+            </p>
+          </div>
+          {canManage && (
+            <div className="flex gap-2">
+              <Link to={`/blog/${id}/edit`} className="btn btn-sm btn-outline">Editar</Link>
+              <button onClick={handleDelete} className="btn btn-sm btn-danger">Eliminar</button>
+            </div>
+          )}
+        </div>
         <div className="prose prose-lg max-w-none">
           <p>{post.contenido}</p>
         </div>

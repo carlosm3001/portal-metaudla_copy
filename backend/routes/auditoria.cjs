@@ -4,6 +4,17 @@ const { auth, authorize } = require('../middleware/auth.cjs');
 
 const router = express.Router();
 
+// Temporary route to fetch raw audit data
+router.get('/raw', auth, authorize('admin'), async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM auditoria_acciones ORDER BY fecha DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching raw audit data:', error);
+    res.status(500).json({ message: 'Error al obtener los datos de auditoría sin procesar' });
+  }
+});
+
 // Get all audit log entries (Admin only)
 router.get('/', auth, authorize(['admin']), async (req, res) => {
   try {

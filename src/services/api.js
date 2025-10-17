@@ -60,7 +60,7 @@ export const getSession = async () => {
 
   try {
     const response = await fetch(`${API_URL}/auth/me`, {
-      headers: { 'x-auth-token': token },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!response.ok) {
       localStorage.removeItem('session_token'); // Token is invalid
@@ -171,6 +171,54 @@ export const replyThread = async (threadId, { content, user, token }) => {
     createdAt: new Date().toISOString(),
     authorId: user.id,
   };
+};
+
+// --- News API ------------------------------------------------------------------
+
+export const createNews = async (newsData, token) => {
+  const response = await fetch(`${API_URL}/news`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(newsData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear la noticia');
+  }
+  return await response.json();
+};
+
+export const updateNews = async (id, newsData, token) => {
+  const response = await fetch(`${API_URL}/news/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(newsData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar la noticia');
+  }
+  return await response.json();
+};
+
+export const deleteNews = async (id, token) => {
+  const response = await fetch(`${API_URL}/news/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al eliminar la noticia');
+  }
+  return await response.json();
 };
 
 // --- Project Actions (Votes, Comments) -----------------------------------------

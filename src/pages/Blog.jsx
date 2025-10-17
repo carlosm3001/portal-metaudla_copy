@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import BlogPostCard from "../components/blog/BlogPostCard";
+import { useAuth } from "../context/AuthContext";
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
@@ -33,9 +36,16 @@ export default function Blog() {
 
   return (
     <main className="container mx-auto max-w-[1200px] px-4 md:px-6 py-10">
-      <header className="mb-6">
-        <h1 className="text-3xl font-extrabold text-ink">Blog Estudiantil</h1>
-        <p className="text-muted">Explora experiencias, reflexiones y aprendizajes de la comunidad.</p>
+      <header className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-extrabold text-ink">Blog Estudiantil</h1>
+          <p className="text-muted">Explora experiencias, reflexiones y aprendizajes de la comunidad.</p>
+        </div>
+        {isLoggedIn && (
+          <Link to="/blog/new" className="btn btn-primary">
+            Crear Publicación
+          </Link>
+        )}
       </header>
 
       {loading ? (

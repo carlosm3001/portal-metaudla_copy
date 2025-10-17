@@ -20,6 +20,7 @@ import ThreadPage from './pages/forum/ThreadPage';
 import Blog from './pages/Blog';
 import BlogPostDetail from './pages/BlogPostDetail';
 import NewBlogPost from './pages/NewBlogPost';
+import EditBlogPost from './pages/EditBlogPost'; // Import EditBlogPost
 import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
 import NewNews from './pages/NewNews';
@@ -70,6 +71,9 @@ function App() {
         } />
         <Route path="blog/new" element={
           <ProtectedRoute><NewBlogPost /></ProtectedRoute>
+        } />
+        <Route path="blog/:id/edit" element={
+          <ProtectedRoute><EditBlogPost /></ProtectedRoute>
         } />
         <Route path="news/new" element={
           <ProtectedRoute><NewNews /></ProtectedRoute>

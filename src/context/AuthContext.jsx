@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Represents initial session loading
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export function AuthProvider({ children }) {
       const session = await api.getSession();
       if (session) {
         setUser(session.user);
+        setToken(session.token);
         setIsLoggedIn(true);
       }
       setIsLoading(false);
@@ -24,15 +26,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (credentials) => {
-    const { user } = await api.login(credentials);
+    const { user, token } = await api.login(credentials);
     setUser(user);
+    setToken(token);
     setIsLoggedIn(true);
     navigate('/'); // Redirect to home after login
   }, [navigate]);
 
   const register = useCallback(async (userData) => {
-    const { user } = await api.register(userData);
+    const { user, token } = await api.register(userData);
     setUser(user);
+    setToken(token);
     setIsLoggedIn(true);
     navigate('/'); // Redirect to home after registration
   }, [navigate]);
@@ -40,12 +44,14 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     await api.logout();
     setUser(null);
+    setToken(null);
     setIsLoggedIn(false);
     navigate('/login'); // Redirect to login after logout
   }, [navigate]);
 
   const value = {
     user,
+    token,
     isLoggedIn,
     isLoading,
     login,

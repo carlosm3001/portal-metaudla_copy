@@ -43,6 +43,7 @@ function normalizeLog(raw) {
     action,
     details,
     iso,
+    display_name: raw.usuarios?.display_name
   };
 }
 

@@ -1,26 +1,41 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function NewBlogPost() {
+export default function EditBlogPost() {
+  const { id } = useParams();
   const [titulo, setTitulo] = useState("");
   const [contenido, setContenido] = useState("");
   const [tema, setTema] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { token } = useAuth();
+
+  useEffect(() => {
+    const fetchBlogPost = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/api/blog/${id}`);
+        if (!response.ok) throw new Error('Error al cargar la publicación.');
+        const data = await response.json();
+        setTitulo(data.titulo);
+        setContenido(data.contenido);
+        setTema(data.tema);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    fetchBlogPost();
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-
-
     try {
-      const response = await fetch('http://localhost:3001/api/blog', {
-        method: 'POST',
+      const response = await fetch(`http://localhost:3001/api/blog/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -30,12 +45,11 @@ export default function NewBlogPost() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al crear la publicación.');
+        throw new Error(errorData.message || 'Error al actualizar la publicación.');
       }
 
-      const result = await response.json();
-      alert('Publicación creada exitosamente!');
-      navigate(`/blog/${result.id}`);
+      alert('Publicación actualizada exitosamente!');
+      navigate(`/blog/${id}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,7 +59,7 @@ export default function NewBlogPost() {
 
   return (
     <main className="container mx-auto max-w-[800px] px-4 md:px-6 py-10">
-      <h1 className="text-3xl font-extrabold text-ink mb-6">Crear Nueva Publicación de Blog</h1>
+      <h1 className="text-3xl font-extrabold text-ink mb-6">Editar Publicación de Blog</h1>
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8">
         {error && <div className="card bg-danger/10 text-danger p-4 mb-4">{error}</div>}
         <div className="mb-4">
@@ -87,7 +101,7 @@ export default function NewBlogPost() {
           className="btn btn-primary w-full"
           disabled={loading}
         >
-          {loading ? 'Creando...' : 'Publicar'}
+          {loading ? 'Actualizando...' : 'Actualizar Publicación'}
         </button>
       </form>
     </main>

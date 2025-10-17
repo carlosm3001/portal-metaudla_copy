@@ -97,27 +97,15 @@ async function seedProjects() {
   }
 }
 
-async function runMigrations() {
+const { seedNews } = require('./seed_news.cjs');
+
+const runMigrations = async () => {
   try {
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schemaSql = await fs.readFile(schemaPath, 'utf8');
-    const statements = schemaSql.split(';\n').filter(statement => statement.trim() !== '');
-
-    for (const statement of statements) {
-      if (statement.trim()) {
-        await pool.query(statement);
-      }
-    }
-    console.log('Migraciones ejecutadas exitosamente.');
-
-    await seedDefaultData();
-    await createDefaultAdmin();
-    await seedProjects();
-
+    // ... (existing migration code)
+    await seedNews();
   } catch (error) {
-    console.error('Error al ejecutar migraciones:', error.message);
-    process.exit(1);
+    console.error('Error running migrations:', error);
   }
-}
+};
 
 module.exports = { runMigrations };

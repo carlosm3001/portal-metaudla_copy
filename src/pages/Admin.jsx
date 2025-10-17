@@ -9,54 +9,135 @@ import { listLogsUnified, formatDateSafe, actionBadge, actionIcon } from "@/serv
 import { extractEmailFromDetails, formatAuditDate } from "@/utils/audit.jsx";
 import { useAuth } from '../context/AuthContext';
 
+import NewsCard from '../components/admin/NewsCard';
+
+import NewsForm from '../components/admin/NewsForm';
+
+
+
 function Admin({ isLoggedIn, userRole }) {
-  const { user } = useAuth();
+
+  const { user, token } = useAuth();
+
   // Estados para datos
+
   const [projects, setProjects] = useState([]);
+
   const [users, setUsers] = useState([]);
-  const [tab, setTab] = React.useState("activity"); // 'activity' | 'users'
-  const [logs, setLogs] = React.useState(null);
+
+  const [news, setNews] = useState([]); // Add news state
+
+  const [tab, setTab] = React.useState("activity"); // 'activity' | 'users' | 'news'
+
+  const [logs, setLogs] = React.useState([]); // Initialize with an empty array
+
   const [q, setQ] = React.useState(""); // búsqueda
+
   const [userFilter, setUserFilter] = React.useState(null); // email para filtrar actividad
 
+
+
   // Estados de carga y error
+
   const [loading, setLoading] = useState(true);
+
   const [usersLoading, setUsersLoading] = useState(true);
+
+  const [newsLoading, setNewsLoading] = useState(true); // Add news loading state
+
   const [error, setError] = useState(null);
+
   const [usersError, setUsersError] = useState(null);
 
+  const [newsError, setNewsError] = useState(null); // Add news error state
+
+
+
   // Estado para el modal
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false); // Add news modal state
+
   const [editingProject, setEditingProject] = useState(null);
+
+  const [editingNews, setEditingNews] = useState(null); // Add editing news state
+
   const navigate = useNavigate();
 
+
+
   // Estados para filtros y orden
+
   const [query, setQuery] = useState("");
+
   const [techFilter, setTechFilter] = useState("Todas");
+
   const [sortBy, setSortBy] = useState("recientes");
 
-  const getAuthHeaders = useCallback(() => ({ 'x-auth-token': localStorage.getItem('session_token') }), []);
+
 
   const fetchProjects = useCallback(async () => {
+
     try {
+
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/projects', { headers: getAuthHeaders() });
+
+      const response = await fetch('http://localhost:3001/api/projects', { headers: { 'Authorization': `Bearer ${token}` } });
+
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
       const data = await response.json();
+
       setProjects(data);
+
     } catch (_) { setError('Error al cargar proyectos.'); } 
+
     finally { setLoading(false); }
-  }, [getAuthHeaders]);
+
+  }, [token]);
+
+
 
   const fetchUsers = useCallback(async () => {
+
     try {
-      const response = await fetch('http://localhost:3001/api/users', { headers: getAuthHeaders() });
+
+      const response = await fetch('http://localhost:3001/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
       const data = await response.json();
+
       setUsers(data);
+
     } catch (_) { setUsersError('Error al cargar usuarios.'); } 
+
     finally { setUsersLoading(false); }
-  }, [getAuthHeaders]);
+
+  }, [token]);
+
+
+
+  const fetchNews = useCallback(async () => { // Add fetchNews function
+
+    try {
+
+      setNewsLoading(true);
+
+      const response = await fetch('http://localhost:3001/api/news', { headers: { 'Authorization': `Bearer ${token}` } });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const data = await response.json();
+
+      setNews(data);
+
+    } catch (_) { setNewsError('Error al cargar noticias.'); } 
+
+    finally { setNewsLoading(false); }
+
+  }, [token]);
 
 
 
@@ -65,31 +146,38 @@ function Admin({ isLoggedIn, userRole }) {
       navigate('/login');
       return;
     }
-    fetchProjects();
-    fetchUsers();
-  }, [isLoggedIn, userRole, navigate, fetchProjects, fetchUsers]);
 
-  React.useEffect(() => {
-    (async () => {
-      const us = await listUsersUnified();
-      setUsers(us);
-      const lg = await listLogsUnified(100);
-      setLogs(lg);
-    })();
-  }, []);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setUsersLoading(true);
+        setNewsLoading(true);
 
-  const filteredUsers = React.useMemo(() => {
-    if (!users) return null;
-    if (!q) return users;
-    const s = q.toLowerCase();
-    return users.filter(u =>
-      (u.email || "").toLowerCase().includes(s) ||
-      (u.display_name || "").toLowerCase().includes(s)
-    );
-  }, [users, q]);
+        const [projectsData, usersData, newsData, logsData] = await Promise.all([
+          fetch('http://localhost:3001/api/projects', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
+          listUsersUnified(),
+          fetch('http://localhost:3001/api/news', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
+          listLogsUnified(100),
+        ]);
+
+        setProjects(projectsData);
+        setUsers(usersData);
+        setNews(newsData);
+        setLogs(logsData);
+      } catch (error) {
+        setError('Error al cargar los datos.');
+      } finally {
+        setLoading(false);
+        setUsersLoading(false);
+        setNewsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isLoggedIn, userRole, navigate, token]);
 
   const logsByUser = React.useMemo(() => {
-    if (!logs) return null;
+    if (!logs) return [];
     if (!userFilter) return logs;
     return logs.filter(l =>
       (l.user || "").toLowerCase() === userFilter.toLowerCase()
@@ -102,12 +190,12 @@ function Admin({ isLoggedIn, userRole }) {
       const url = formData.get('id')
         ? `http://localhost:3001/api/projects/${formData.get('id')}`
         : 'http://localhost:3001/api/projects';
-      const response = await fetch(url, { method, headers: getAuthHeaders(), body: formData });
+      const response = await fetch(url, { method, headers: { 'Authorization': `Bearer ${token}` }, body: formData });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
       const action = formData.get('id') ? 'edit_project' : 'create_project';
 
-      setIsModalOpen(false);
+      setIsModalОpen(false);
       fetchProjects(); // Recargar proyectos
     } catch (err) {
       setError('Error al guardar el proyecto.');
@@ -117,7 +205,7 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteProject = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
       try {
-        await fetch(`http://localhost:3001/api/projects/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        await fetch(`http://localhost:3001/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
 
         fetchProjects(); // Recargar
       } catch (err) { setError('Error al eliminar el proyecto.'); }
@@ -127,10 +215,45 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteUser = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        await fetch(`http://localhost:3001/api/users/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        await fetch(`http://localhost:3001/api/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
 
         fetchUsers(); // Recargar
       } catch (err) { setUsersError('Error al eliminar el usuario.'); }
+    }
+  };
+
+  const handleSaveNews = async (formData) => {
+    try {
+      const method = formData.get('id') ? 'PUT' : 'POST';
+      const url = formData.get('id')
+        ? `http://localhost:3001/api/news/${formData.get('id')}`
+        : 'http://localhost:3001/api/news';
+      const response = await fetch(url, { 
+        method, 
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(Object.fromEntries(formData))
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      setIsNewsModalOpen(false);
+      fetchNews(); // Recargar noticias
+    } catch (err) {
+      setNewsError('Error al guardar la noticia.');
+    }
+  };
+
+  const handleEditNews = (news) => {
+    setEditingNews(news);
+    setIsNewsModalOpen(true);
+  }
+
+  const handleDeleteNews = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
+      try {
+        await fetch(`http://localhost:3001/api/news/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+
+        fetchNews(); // Recargar
+      } catch (err) { setNewsError('Error al eliminar la noticia.'); }
     }
   };
 
@@ -185,27 +308,52 @@ function Admin({ isLoggedIn, userRole }) {
           </button>
         </div>
 
-        {/* Layout principal de dos columnas */}
-        <div className="grid grid-cols-1 lg:grid-cols-20 items-start gap-8 admin-grid">
-          
-          {/* Columna Izquierda: Gestión de Proyectos */}
-          <section className="bg-base-200 rounded-2xl shadow-sm p-4 sm:p-6 lg:col-span-11">
-            {/* Toolbar de Proyectos */}
+        {/* Tabs for selecting the management section */}
+        <div className="flex gap-2 mb-4">
+          <button
+            className={`pill ${tab === "projects" ? "bg-brand-100 text-brand-700" : ""}`}
+            onClick={() => setTab("projects")}
+          >
+            Gestión de Proyectos
+          </button>
+          <button
+            className={`pill ${tab === "news" ? "bg-brand-100 text-brand-700" : ""}`}
+            onClick={() => setTab("news")}
+          >
+            Gestión de Noticias
+          </button>
+          <button
+            className={`pill ${tab === "users" ? "bg-brand-100 text-brand-700" : ""}`}
+            onClick={() => setTab("users")}
+          >
+            Gestión de Usuarios
+          </button>
+          <button
+            className={`pill ${tab === "activity" ? "bg-brand-100 text-brand-700" : ""}`}
+            onClick={() => setTab("activity")}
+          >
+            Registro de Actividad
+          </button>
+        </div>
+
+        {/* Conditionally render the selected management section */}
+        {tab === "projects" && (
+          <section className="card p-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h2 className="text-xl font-bold text-ink-primary flex-shrink-0">Gestión de Proyectos</h2>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
                 <input
                   type="search"
-                  className="input input-bordered w-full sm:w-48 h-10"
+                  className="input input-bordered w-full h-10"
                   placeholder="Buscar..."
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                 />
-                <select className="select select-bordered w-full sm:w-auto h-10" value={techFilter} onChange={e => setTechFilter(e.target.value)}>
+                <select className="select select-bordered w-full h-10" value={techFilter} onChange={e => setTechFilter(e.target.value)}>
                   <option value="Todas">Todas las tecnologías</option>
                   {(Array.from(new Set(projects.flatMap(p => p.technologies ? p.technologies.split(',').map(t=>t.trim()) : [])))).map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <select className="select select-bordered w-full sm:w-auto h-10" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                <select className="select select-bordered w-full h-10" value={sortBy} onChange={e => setSortBy(e.target.value)}>
                   <option value="recientes">Más recientes</option>
                   <option value="alfabetico">A–Z</option>
                   <option value="votos">Más votados</option>
@@ -213,15 +361,13 @@ function Admin({ isLoggedIn, userRole }) {
               </div>
             </div>
 
-            {/* Grid de Proyectos */}
             {error && <p className="text-red-500">{error}</p>}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredProjects.map(p => (
                 <ProjectCard key={p.id} project={p} onEdit={handleEditProject} onDelete={handleDeleteProject} />
               ))}
             </div>
 
-            {/* Estado Vacío */}
             {!loading && filteredProjects.length === 0 && (
               <div className="text-center py-16 col-span-full">
                 <div className="text-6xl opacity-50">🗂️</div>
@@ -230,185 +376,158 @@ function Admin({ isLoggedIn, userRole }) {
               </div>
             )}
           </section>
+        )}
+        {tab === "news" && (
+          <section className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-ink font-bold">Gestión de Noticias</h2>
+              <button 
+                className="btn btn-primary btn-sm"
+                onClick={() => { setEditingNews(null); setIsNewsModalOpen(true); }}
+              >
+                + Añadir Noticia
+              </button>
+            </div>
+            {newsError && <p className="text-red-500">{newsError}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {news.map(n => (
+                <NewsCard key={n.id} news={n} onEdit={handleEditNews} onDelete={handleDeleteNews} />
+              ))}
+            </div>
+          </section>
+        )}
+        {tab === "users" && (
+          <section className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-ink font-bold">Gestión de Usuarios</h2>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Buscar por email o nombre…"
+                className="input w-full sm:w-auto"
+              />
+            </div>
 
-                    {/* Columna Derecha: Paneles de Actividad y Usuarios */}
-                    <div className="lg:col-span-9">
-                      <div className="flex gap-2 mb-4">
-                        <button
-                          className={`pill ${tab === "activity" ? "bg-brand-100 text-brand-700" : ""}`}
-                          onClick={() => setTab("activity")}
-                        >
-                          Registro de Actividad
-                        </button>
-                        <button
-                          className={`pill ${tab === "users" ? "bg-brand-100 text-brand-700" : ""}`}
-                          onClick={() => setTab("users")}
-                        >
-                          Gestión de Usuarios
-                        </button>
-                      </div>
-          
-                      {tab === "users" ? (
-                        <section className="card p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-ink font-bold">Gestión de Usuarios</h2>
-                            <input
-                              value={q}
-                              onChange={(e) => setQ(e.target.value)}
-                              placeholder="Buscar por email o nombre…"
-                              className="input w-[320px]"
-                            />
-                          </div>
-          
-                          {filteredUsers === null ? (
-                            <div className="py-12 text-center text-muted">Cargando usuarios…</div>
-                          ) : filteredUsers.length === 0 ? (
-                            <div className="py-12 text-center text-muted">
-                              No hay usuarios que coincidan.
-                            </div>
-                          ) : (
-                            <div className="overflow-auto">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="text-ink font-semibold border-b">
-                                    <th className="py-2 text-left">Email</th>
-                                    <th className="text-left">Nombre</th>
-                                    <th className="text-left">Rol</th>
-                                    <th className="text-left">Estado</th>
-                                    <th className="text-left">Última vez</th>
-                                    <th className="text-left">Acciones</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {filteredUsers.map((u) => (
-                                    <tr
-                                      key={u.id || u.email}
-                                      className="border-b hover:bg-brand-50/50"
-                                    >
-                                      <td className="py-2">
-                                        <button className="link" onClick={() => setUserFilter(u.email)}>
-                                          {u.email}
-                                        </button>
-                                      </td>
-                                      <td>{u.display_name || "—"}</td>
-                                      <td>
-                                        <select
-                                          className="input input-sm"
-                                          defaultValue={u.role || "user"}
-                                          onChange={async (e) => {
-                                            await setUserRoleUnified(u.email, e.target.value);
-                                            setUsers((prev) =>
-                                              prev.map((p) =>
-                                                p.email === u.email
-                                                  ? { ...p, role: e.target.value }
-                                                  : p
-                                              )
-                                            );
-                                          }}
-                                        >
-                                          <option value="user">user</option>
-                                          <option value="admin">admin</option>
-                                        </select>
-                                      </td>
-                                      <td>
-                                        <label className="inline-flex items-center gap-2">
-                                          <input
-                                            type="checkbox"
-                                            defaultChecked={u.is_active !== false}
-                                            onChange={async (e) => {
-                                              await toggleUserActiveUnified(
-                                                u.email,
-                                                e.target.checked
-                                              );
-                                              setUsers((prev) =>
-                                                prev.map((p) =>
-                                                  p.email === u.email
-                                                    ? { ...p, is_active: e.target.checked }
-                                                    : p
-                                                )
-                                              );
-                                            }}
-                                          />
-                                          <span className="pill pill-sm">
-                                            {u.is_active !== false ? "activo" : "inactivo"}
-                                          </span>
-                                        </label>
-                                      </td>
-                                      <td>{formatDateSafe(u.last_seen_at || u.created_at)}</td>
-                                      <td>
-                                        <button
-                                          className="btn btn-sm"
-                                          onClick={() => setUserFilter(u.email)}
-                                        >
-                                          Ver actividad
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </section>
-                      ) : (
-                        <section className="card p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-ink font-bold">Registro de Actividad</h2>
-                            <div className="flex items-center gap-2">
-                              <input
-                                value={userFilter || ""}
-                                onChange={(e) => setUserFilter(e.target.value || null)}
-                                placeholder="Filtrar por email…"
-                                className="input w-[280px]"
-                              />
-                              {userFilter && (
-                                <button className="btn btn-sm" onClick={() => setUserFilter(null)}>
-                                  Quitar filtro
-                                </button>
-                              )}
-                            </div>
-                          </div>
-          
-                          {logsByUser === null ? (
-                            <div className="py-12 text-center text-muted">Cargando registros…</div>
-                          ) : logsByUser.length === 0 ? (
-                            <div className="py-12 text-center text-muted">
-                              No hay actividad registrada.
-                            </div>
-                          ) : (
-                            <div className="overflow-auto">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="text-ink font-semibold border-b">
-                                    <th className="py-2 text-left">Usuario</th>
-                                    <th className="text-left">Acción</th>
-                                    <th className="text-left">Detalles</th>
-                                    <th className="text-left">Fecha</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {logsByUser.map((l) => (
-                                    <tr key={l.id} className="border-b hover:bg-brand-50/50">
-                                      <td className="py-2">{l.user}</td>
-                                      <td>
-                                        <span className={actionBadge(l.action)}>
-                                          <span className="mr-1">{actionIcon(l.action)}</span>
-                                          {l.action}
-                                        </span>
-                                      </td>
-                                      <td className="max-w-[420px] truncate">
-                                        {renderDetails(l.details)}
-                                      </td>
-                                      <td>{formatDateSafe(l.iso)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </section>
-                      )}
-                    </div>        </div>
+            {filteredUsers === null ? (
+              <div className="py-12 text-center text-muted">Cargando usuarios…</div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="py-12 text-center text-muted">
+                No hay usuarios que coincidan.
+              </div>
+            ) : (
+              <div className="overflow-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-ink font-semibold border-b">
+                      <th className="py-2 text-left">Email</th>
+                      <th className="text-left">Rol</th>
+                      <th className="text-left">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((u) => (
+                      <tr
+                        key={u.id || u.email}
+                        className="border-b hover:bg-brand-50/50"
+                      >
+                        <td className="py-2">
+                          <button className="link" onClick={() => setUserFilter(u.email)}>
+                            {u.email}
+                          </button>
+                        </td>
+                        <td>
+                          <select
+                            className="input input-sm"
+                            defaultValue={u.role || "user"}
+                            onChange={async (e) => {
+                              await setUserRoleUnified(u.email, e.target.value);
+                              setUsers((prev) =>
+                                prev.map((p) =>
+                                  p.email === u.email
+                                    ? { ...p, role: e.target.value }
+                                    : p
+                                )
+                              );
+                            }}
+                          >
+                            <option value="user">user</option>
+                            <option value="admin">admin</option>
+                          </select>
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => setUserFilter(u.email)}
+                          >
+                            Ver actividad
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+        {tab === "activity" && (
+          <section className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-ink font-bold">Registro de Actividad</h2>
+              <div className="flex items-center gap-2">
+                <input
+                  value={userFilter || ""}
+                  onChange={(e) => setUserFilter(e.target.value || null)}
+                  placeholder="Filtrar por email…"
+                  className="input w-full sm:w-auto"
+                />
+                {userFilter && (
+                  <button className="btn btn-sm" onClick={() => setUserFilter(null)}>
+                    Quitar filtro
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {logsByUser === null ? (
+              <div className="py-12 text-center text-muted">Cargando registros…</div>
+            ) : logsByUser.length === 0 ? (
+              <div className="py-12 text-center text-muted">
+                No hay actividad registrada.
+              </div>
+            ) : (
+              <div className="overflow-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-ink font-semibold border-b">
+                      <th className="py-2 text-left">Usuario</th>
+                      <th className="text-left">Acción</th>
+                      <th className="text-left">Detalles</th>
+                      <th className="text-left">Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logsByUser.map((l) => (
+                      <tr key={l.id} className="border-b hover:bg-brand-50/50">
+                        <td className="py-2">{l.display_name || l.user}</td>
+                        <td>
+                          <span className={actionBadge(l.action)}>
+                            <span className="mr-1">{actionIcon(l.action)}</span>
+                            {l.action}
+                          </span>
+                        </td>
+                        <td className="max-w-[200px] truncate">
+                          {renderDetails(l.details)}
+                        </td>
+                        <td>{formatDateSafe(l.iso)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Modal para crear/editar proyecto */}
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingProject ? 'Editar Proyecto' : 'Añadir Nuevo Proyecto'}>
@@ -416,6 +535,15 @@ function Admin({ isLoggedIn, userRole }) {
             project={editingProject} 
             onSubmit={handleSaveProject} 
             onCancel={() => setIsModalOpen(false)} 
+          />
+        </Modal>
+
+        {/* Modal para crear/editar noticia */}
+        <Modal isOpen={isNewsModalOpen} onClose={() => setIsNewsModalOpen(false)} title={editingNews ? 'Editar Noticia' : 'Añadir Nueva Noticia'}>
+          <NewsForm 
+            news={editingNews} 
+            onSubmit={handleSaveNews} 
+            onCancel={() => setIsNewsModalOpen(false)} 
           />
         </Modal>
       </main>

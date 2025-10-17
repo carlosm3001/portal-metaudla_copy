@@ -7,6 +7,7 @@ const { pool } = require('../db/connection.cjs');
  * @param {object} [detalles] - Un objeto con detalles adicionales para almacenar como JSON.
  */
 async function logAction(usuario_id, accion, detalles = null) {
+  console.log('Logging action:', { usuario_id, accion, detalles });
   try {
     const detallesJson = detalles ? JSON.stringify(detalles) : null;
     await pool.query(

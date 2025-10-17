@@ -1,10 +1,17 @@
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
-  const token = req.header('x-auth-token');
+  const authHeader = req.header('Authorization');
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No token or invalid format, authorization denied' });
+  }
+
+  const token = authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+    // This case is technically covered by the startsWith check, but it's good for robustness
+    return res.status(401).json({ message: 'No token found in Authorization header' });
   }
 
   try {
