@@ -25,16 +25,6 @@ function Admin({ isLoggedIn, userRole }) {
 
   const [users, setUsers] = useState([]);
 
-  const [news, setNews] = useState([]); // Add news state
-
-  const [tab, setTab] = React.useState("activity"); // 'activity' | 'users' | 'news'
-
-  const [logs, setLogs] = React.useState([]); // Initialize with an empty array
-
-  const [q, setQ] = React.useState(""); // búsqueda
-
-  const [userFilter, setUserFilter] = React.useState(null); // email para filtrar actividad
-
 
 
   // Estados de carga y error
@@ -74,6 +64,11 @@ function Admin({ isLoggedIn, userRole }) {
   const [techFilter, setTechFilter] = useState("Todas");
 
   const [sortBy, setSortBy] = useState("recientes");
+  const [tab, setTab] = useState('projects');
+  const [logs, setLogs] = useState(null);
+  const [userFilter, setUserFilter] = useState(null);
+  const [news, setNews] = useState([]);
+  const [q, setQ] = useState("");
 
 
 
@@ -176,6 +171,16 @@ function Admin({ isLoggedIn, userRole }) {
     fetchData();
   }, [isLoggedIn, userRole, navigate, token]);
 
+  const filteredUsers = React.useMemo(() => {
+    if (!users) return null;
+    if (!q) return users;
+    const s = q.toLowerCase();
+    return users.filter(u =>
+      (u.email || "").toLowerCase().includes(s) ||
+      (u.display_name || "").toLowerCase().includes(s)
+    );
+  }, [users, q]);
+
   const logsByUser = React.useMemo(() => {
     if (!logs) return [];
     if (!userFilter) return logs;
@@ -195,7 +200,7 @@ function Admin({ isLoggedIn, userRole }) {
       
       const action = formData.get('id') ? 'edit_project' : 'create_project';
 
-      setIsModalОpen(false);
+      setIsModalOpen(false);
       fetchProjects(); // Recargar proyectos
     } catch (err) {
       setError('Error al guardar el proyecto.');
@@ -419,8 +424,12 @@ function Admin({ isLoggedIn, userRole }) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-ink font-semibold border-b">
+                      <th className="py-2 text-left">Nombre</th>
                       <th className="py-2 text-left">Email</th>
                       <th className="text-left">Rol</th>
+                      <th className="text-left">Activo</th>
+                      <th className="text-left">Última Actividad</th>
+                      <th className="text-left">Creado</th>
                       <th className="text-left">Acciones</th>
                     </tr>
                   </thead>
@@ -430,6 +439,7 @@ function Admin({ isLoggedIn, userRole }) {
                         key={u.id || u.email}
                         className="border-b hover:bg-brand-50/50"
                       >
+                        <td className="py-2">{u.display_name}</td>
                         <td className="py-2">
                           <button className="link" onClick={() => setUserFilter(u.email)}>
                             {u.email}
@@ -454,6 +464,25 @@ function Admin({ isLoggedIn, userRole }) {
                             <option value="admin">admin</option>
                           </select>
                         </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className="toggle toggle-sm"
+                            checked={u.is_active}
+                            onChange={async (e) => {
+                              await toggleUserActiveUnified(u.email, e.target.checked);
+                              setUsers((prev) =>
+                                prev.map((p) =>
+                                  p.email === u.email
+                                    ? { ...p, is_active: e.target.checked }
+                                    : p
+                                )
+                              );
+                            }}
+                          />
+                        </td>
+                        <td>{formatDateSafe(u.last_activity_at)}</td>
+                        <td>{formatDateSafe(u.created_at)}</td>
                         <td>
                           <button
                             className="btn btn-sm"
