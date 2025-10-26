@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email VARCHAR(191) NOT NULL UNIQUE,
     contrasena VARCHAR(255) NOT NULL,
     rol ENUM('admin', 'user', 'student', 'teacher') DEFAULT 'user',
+    reset_token VARCHAR(255),
+    reset_token_expires DATETIME,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

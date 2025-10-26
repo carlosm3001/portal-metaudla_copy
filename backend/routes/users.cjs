@@ -2,6 +2,7 @@ const express = require('express');
 const { pool } = require('../src/db/connection.cjs');
 const { auth, authorize } = require('../src/middleware/auth.cjs');
 const { logAction } = require('../utils/logger.cjs');
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
@@ -79,6 +80,28 @@ router.put('/active', auth, authorize(['admin']), async (req, res) => {
   } catch (error) {
     console.error('Error updating user status:', error);
     res.status(500).json({ message: 'Error al actualizar el estado del usuario' });
+  }
+});
+
+// Update current user's profile (e.g., password)
+router.put('/me', auth, async (req, res) => {
+  const { password } = req.body;
+  const userId = req.user.id;
+
+  if (!password) {
+    return res.status(400).json({ message: 'La contraseña es requerida para actualizar el perfil.' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE usuarios SET contrasena = ? WHERE id = ?', [hashedPassword, userId]);
+
+    await logAction(userId, 'update_profile_password');
+
+    res.json({ message: 'Contraseña actualizada exitosamente.' });
+  } catch (error) {
+    console.error('Error updating user password:', error);
+    res.status(500).json({ message: 'Error al actualizar la contraseña del usuario.' });
   }
 });
 

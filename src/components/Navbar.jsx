@@ -19,7 +19,10 @@ export default function Header() {
           <li><NavLink to="/blog" className={navClass}>Blog</NavLink></li>
           <li><NavLink to="/news" className={navClass}>Noticias</NavLink></li>
           {isLoggedIn && (
-            <li><NavLink to="/request-project" className={navClass}>Solicitar Proyecto</NavLink></li>
+            <>
+              <li><NavLink to="/request-project" className={navClass}>Solicitar Proyecto</NavLink></li>
+              <li><NavLink to="/profile" className={navClass}>Mi Perfil</NavLink></li>
+            </>
           )}
           {isLoggedIn && userRole === 'admin' && (
             <li><NavLink to="/admin" className={navClass}>Administración</NavLink></li>

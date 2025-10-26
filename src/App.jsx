@@ -25,6 +25,9 @@ import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
 import NewNews from './pages/NewNews';
 import RequestProject from './pages/RequestProject';
+import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Auth
 import { useAuth } from './context/AuthContext';
@@ -62,6 +65,8 @@ function App() {
         {/* Auth Routes that should only be accessible when logged out */}
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<ResetPassword />} />
 
         {/* Protected Routes */}
         <Route path="projects/new" element={
@@ -81,6 +86,9 @@ function App() {
         } />
         <Route path="request-project" element={
           <ProtectedRoute><RequestProject /></ProtectedRoute>
+        } />
+        <Route path="profile" element={
+          <ProtectedRoute><Profile /></ProtectedRoute>
         } />
         <Route path="admin" element={
           <ProtectedRoute>

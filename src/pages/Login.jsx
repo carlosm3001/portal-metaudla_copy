@@ -37,6 +37,9 @@ export default function Login() {
             <label htmlFor="password" className="label">Contraseña</label>
             <input id="password" type="password" className="input" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
           </div>
+          <div className="text-right text-sm">
+            <Link to="/forgot-password" className="link link-hover">¿Olvidaste tu contraseña?</Link>
+          </div>
           
           {error && <p className="error-text text-center">{error}</p>}
 
