@@ -24,6 +24,7 @@ import EditBlogPost from './pages/EditBlogPost'; // Import EditBlogPost
 import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
 import NewNews from './pages/NewNews';
+import RequestProject from './pages/RequestProject';
 
 // Auth
 import { useAuth } from './context/AuthContext';
@@ -77,6 +78,9 @@ function App() {
         } />
         <Route path="news/new" element={
           <ProtectedRoute><NewNews /></ProtectedRoute>
+        } />
+        <Route path="request-project" element={
+          <ProtectedRoute><RequestProject /></ProtectedRoute>
         } />
         <Route path="admin" element={
           <ProtectedRoute>

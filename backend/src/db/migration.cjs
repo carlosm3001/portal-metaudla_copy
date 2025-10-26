@@ -2,6 +2,7 @@ const { pool } = require('./connection.cjs');
 const fs = require('fs').promises;
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const { seedNews } = require('./seed_news.cjs');
 
 async function createDefaultAdmin() {
   const adminEmail = 'admin@udla.edu.co';
@@ -97,14 +98,40 @@ async function seedProjects() {
   }
 }
 
-const { seedNews } = require('./seed_news.cjs');
-
 const runMigrations = async () => {
   try {
-    // ... (existing migration code)
+    // Check if the 'usuarios' table already exists
+    const [rows] = await pool.query("SHOW TABLES LIKE 'usuarios'");
+    if (rows.length > 0) {
+      console.log('Database already initialized. Skipping migrations.');
+      return;
+    }
+
+    console.log('Running migrations...');
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schemaSql = await fs.readFile(schemaPath, 'utf8');
+    
+    // Split statements, ignoring empty ones and comments
+    // Execute the entire schema.sql file as a single query
+    try {
+      console.log(`Executing full schema.sql...`);
+      await pool.query(schemaSql);
+    } catch (error) {
+      console.error(`Error executing full schema.sql: ${error.message}`);
+      throw error;
+    }
+    console.log('✅ Database schema created successfully.');
+
+    await createDefaultAdmin();
+    await seedDefaultData();
+    await seedProjects();
     await seedNews();
+    console.log('✅ Database seeded successfully.');
+
   } catch (error) {
-    console.error('Error running migrations:', error);
+    console.error('❌ Error running migrations:', error.message);
+    // Exit process if migrations fail, as the app state is uncertain
+    process.exit(1);
   }
 };
 

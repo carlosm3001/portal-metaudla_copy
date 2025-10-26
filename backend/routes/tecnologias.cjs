@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool } = require('../db/connection.cjs');
+const { pool } = require('../src/db/connection.cjs');
 
 const router = express.Router();
 

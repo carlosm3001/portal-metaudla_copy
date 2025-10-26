@@ -1,9 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../db/connection.cjs');
+const { pool } = require('../src/db/connection.cjs');
 const { logAction } = require('../utils/logger.cjs');
-const { auth } = require('../middleware/auth.cjs');
+const { auth } = require('../src/middleware/auth.cjs');
 
 const router = express.Router();
 
@@ -67,19 +67,22 @@ router.post('/login', async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // Get current user data based on token
 router.get('/me', auth, async (req, res) => {
+  console.log('Auth /me route: Request reached handler.');
   try {
     const [rows] = await pool.query('SELECT id, email, rol AS role FROM usuarios WHERE id = ?', [req.user.id]);
     const user = rows[0];
     if (!user) {
+      console.log('Auth /me route: User not found in DB.');
       return res.status(404).json({ message: 'Usuario no encontrado.' });
     }
+    console.log('Auth /me route: User data sent:', user);
     res.json(user);
   } catch (error) {
-    console.error('Error fetching user data:', error);
+    console.error('Auth /me route: Error fetching user data:', error);
     res.status(500).json({ message: 'Error al obtener datos del usuario.' });
   }
 });
+
+module.exports = router;

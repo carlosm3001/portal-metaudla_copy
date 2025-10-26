@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { testConnection } = require('./db/connection.cjs');
-const { runMigrations } = require('./db/migration.cjs');
+const { testConnection } = require('./src/db/connection.cjs');
+const { runMigrations } = require('./src/db/migration.cjs');
 const authRoutes = require('./routes/auth.cjs');
 const proyectosRoutes = require('./routes/proyectos.cjs');
 const usersRoutes = require('./routes/users.cjs');
@@ -14,6 +14,7 @@ const calificacionesRoutes = require('./routes/calificaciones.cjs');
 const blogRoutes = require('./routes/blog.cjs');
 const noticiasRoutes = require('./routes/noticias.cjs');
 const forumRoutes = require('./routes/forum.cjs');
+const solicitudesRouter = require('./routes/solicitudes.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -35,6 +36,7 @@ app.use('/api', calificacionesRoutes); // Montado en /api
 app.use('/api/blog', blogRoutes);
 app.use('/api/news', noticiasRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/solicitudes', solicitudesRouter);
 
 // Basic route
 app.get('/', (req, res) => {

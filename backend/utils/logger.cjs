@@ -1,4 +1,4 @@
-const { pool } = require('../db/connection.cjs');
+const { pool } = require('../src/db/connection.cjs');
 
 /**
  * Registra una acción de usuario en la base de datos.

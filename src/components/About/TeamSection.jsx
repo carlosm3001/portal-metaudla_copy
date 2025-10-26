@@ -1,5 +1,19 @@
 const TEAM = [
   {
+    id: 4,
+    name: "Carlos Mario Villegas Artunduaga",
+    role: "Creador de la web",
+    email: "carlos.villegas@udla.edu.co",
+    bio: "Estudiante de la Universidad de la Amazonia, 8 semestre."
+  },
+  {
+    id: 5,
+    name: "Ingeniero Eduardo Millan Rojas",
+    role: "Ingeniero revisor, supervisor y colaborador del proyecto",
+    email: "eduardo.millan@udla.edu.co",
+    bio: ""
+  },
+  {
     id: 1,
     name: "Juan Pérez",
     role: "Administrador del portal",
@@ -18,6 +32,13 @@ const TEAM = [
     linkedin: "https://www.linkedin.com/in/carlosg",
     photo: "/assets/team/carlos.jpg",
     bio: "Ing. de software. Enfocado en UX, accesibilidad y entrega continua."
+  },
+  {
+    id: 6,
+    name: "Docente Fredy Antonio Verástegui González",
+    role: "Docente de apoyo",
+    email: "fredy.verastegui@udla.edu.co", // Placeholder email
+    bio: ""
   },
   {
     id: 3,

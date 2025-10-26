@@ -1,6 +1,6 @@
 const express = require('express');
-const { pool } = require('../db/connection.cjs');
-const { auth, authorize } = require('../middleware/auth.cjs');
+const { pool } = require('../src/db/connection.cjs');
+const { auth, authorize } = require('../src/middleware/auth.cjs');
 const { logAction } = require('../utils/logger.cjs');
 
 const router = express.Router();
@@ -38,6 +38,47 @@ router.delete('/:id', auth, authorize(['admin']), async (req, res) => {
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ message: 'Error al eliminar usuario' });
+  }
+});
+
+
+// Update user role (Admin only)
+router.put('/role', auth, authorize(['admin']), async (req, res) => {
+  const { email, role } = req.body;
+  const actorId = req.user.id;
+
+  try {
+    const [result] = await pool.query('UPDATE usuarios SET rol = ? WHERE email = ?', [role, email]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    await logAction(actorId, 'update_user_role', { updatedUserEmail: email, newRole: role });
+
+    res.json({ message: 'Rol de usuario actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({ message: 'Error al actualizar el rol del usuario' });
+  }
+});
+
+// Update user active status (Admin only)
+router.put('/active', auth, authorize(['admin']), async (req, res) => {
+  const { email, is_active } = req.body;
+  const actorId = req.user.id;
+
+  try {
+    const [result] = await pool.query('UPDATE usuarios SET is_active = ? WHERE email = ?', [is_active, email]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    await logAction(actorId, 'update_user_status', { updatedUserEmail: email, newStatus: is_active });
+
+    res.json({ message: 'Estado de usuario actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error updating user status:', error);
+    res.status(500).json({ message: 'Error al actualizar el estado del usuario' });
   }
 });
 

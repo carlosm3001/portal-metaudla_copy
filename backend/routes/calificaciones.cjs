@@ -1,6 +1,6 @@
 const express = require('express');
-const { pool } = require('../db/connection.cjs');
-const { auth } = require('../middleware/auth.cjs');
+const { pool } = require('../src/db/connection.cjs');
+const { auth } = require('../src/middleware/auth.cjs');
 const { logAction } = require('../utils/logger.cjs');
 
 const router = express.Router();

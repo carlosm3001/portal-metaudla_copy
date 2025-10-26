@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 
 import NewsCard from '../components/admin/NewsCard';
 
+import ActivityLogModal from '../components/admin/ActivityLogModal';
 import NewsForm from '../components/admin/NewsForm';
 
 
@@ -52,6 +53,8 @@ function Admin({ isLoggedIn, userRole }) {
   const [editingProject, setEditingProject] = useState(null);
 
   const [editingNews, setEditingNews] = useState(null); // Add editing news state
+  const [isActivityLogModalOpen, setIsActivityLogModalOpen] = useState(false);
+  const [selectedUserEmail, setSelectedUserEmail] = useState(null);
 
   const navigate = useNavigate();
 
@@ -69,6 +72,7 @@ function Admin({ isLoggedIn, userRole }) {
   const [userFilter, setUserFilter] = useState(null);
   const [news, setNews] = useState([]);
   const [q, setQ] = useState("");
+  const [projectRequests, setProjectRequests] = useState([]);
 
 
 
@@ -148,17 +152,19 @@ function Admin({ isLoggedIn, userRole }) {
         setUsersLoading(true);
         setNewsLoading(true);
 
-        const [projectsData, usersData, newsData, logsData] = await Promise.all([
+        const [projectsData, usersData, newsData, logsData, requestsData] = await Promise.all([
           fetch('http://localhost:3001/api/projects', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
-          listUsersUnified(),
+          listUsersUnified(token),
           fetch('http://localhost:3001/api/news', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
           listLogsUnified(100),
+          fetch('http://localhost:3001/api/solicitudes', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
         ]);
 
         setProjects(projectsData);
         setUsers(usersData);
         setNews(newsData);
         setLogs(logsData);
+        setProjectRequests(requestsData);
       } catch (error) {
         setError('Error al cargar los datos.');
       } finally {
@@ -262,6 +268,19 @@ function Admin({ isLoggedIn, userRole }) {
     }
   };
 
+  const handleRequestUpdate = async (id, estado) => {
+    try {
+      await fetch(`http://localhost:3001/api/solicitudes/${id}`, { 
+        method: 'PUT', 
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ estado })
+      });
+      setProjectRequests(prev => prev.map(r => r.id === id ? { ...r, estado } : r));
+    } catch (err) {
+      console.error("Error updating request", err);
+    }
+  };
+
   const handleEditProject = (project) => {
     setEditingProject(project);
     setIsModalOpen(true);
@@ -338,6 +357,12 @@ function Admin({ isLoggedIn, userRole }) {
             onClick={() => setTab("activity")}
           >
             Registro de Actividad
+          </button>
+          <button
+            className={`pill ${tab === "requests" ? "bg-brand-100 text-brand-700" : ""}`}
+            onClick={() => setTab("requests")}
+          >
+            Solicitudes de Proyectos
           </button>
         </div>
 
@@ -450,7 +475,7 @@ function Admin({ isLoggedIn, userRole }) {
                             className="input input-sm"
                             defaultValue={u.role || "user"}
                             onChange={async (e) => {
-                              await setUserRoleUnified(u.email, e.target.value);
+                              await setUserRoleUnified(u.email, e.target.value, token);
                               setUsers((prev) =>
                                 prev.map((p) =>
                                   p.email === u.email
@@ -470,7 +495,7 @@ function Admin({ isLoggedIn, userRole }) {
                             className="toggle toggle-sm"
                             checked={u.is_active}
                             onChange={async (e) => {
-                              await toggleUserActiveUnified(u.email, e.target.checked);
+                              await toggleUserActiveUnified(u.email, e.target.checked, token);
                               setUsers((prev) =>
                                 prev.map((p) =>
                                   p.email === u.email
@@ -486,7 +511,10 @@ function Admin({ isLoggedIn, userRole }) {
                         <td>
                           <button
                             className="btn btn-sm"
-                            onClick={() => setUserFilter(u.email)}
+                onClick={() => {
+                            setSelectedUserEmail(u.email);
+                            setIsActivityLogModalOpen(true);
+                          }}
                           >
                             Ver actividad
                           </button>
@@ -557,6 +585,42 @@ function Admin({ isLoggedIn, userRole }) {
             )}
           </section>
         )}
+        {tab === "requests" && (
+          <section className="card p-4">
+            <h2 className="text-ink font-bold mb-3">Solicitudes de Proyectos</h2>
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-ink font-semibold border-b">
+                    <th className="py-2 text-left">Nombre</th>
+                    <th className="py-2 text-left">Descripción</th>
+                    <th className="text-left">Usuario</th>
+                    <th className="text-left">Estado</th>
+                    <th className="text-left">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.isArray(projectRequests) && projectRequests.map((r) => (
+                    <tr key={r.id} className="border-b hover:bg-brand-50/50">
+                      <td className="py-2">{r.nombre}</td>
+                      <td className="py-2 max-w-xs truncate">{r.descripcion}</td>
+                      <td>{r.usuario_id}</td>
+                      <td><span className={`badge badge-sm ${r.estado === 'pendiente' ? 'badge-warning' : r.estado === 'aprobado' ? 'badge-success' : 'badge-error'}`}>{r.estado}</span></td>
+                      <td className="flex gap-2 py-2">
+                        {r.estado === 'pendiente' && (
+                          <>
+                            <button className="btn btn-xs btn-success" onClick={() => handleRequestUpdate(r.id, 'aprobado')}>Aprobar</button>
+                            <button className="btn btn-xs btn-error" onClick={() => handleRequestUpdate(r.id, 'rechazado')}>Rechazar</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
         {/* Modal para crear/editar proyecto */}
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingProject ? 'Editar Proyecto' : 'Añadir Nuevo Proyecto'}>
@@ -575,6 +639,13 @@ function Admin({ isLoggedIn, userRole }) {
             onCancel={() => setIsNewsModalOpen(false)} 
           />
         </Modal>
+
+        <ActivityLogModal 
+          isOpen={isActivityLogModalOpen}
+          onClose={() => setIsActivityLogModalOpen(false)}
+          logs={logs}
+          userEmail={selectedUserEmail}
+        />
       </main>
     </div>
   );

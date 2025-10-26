@@ -40,7 +40,7 @@ export default function Home() {
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Link to="/projects" className="btn btn-primary">Explorar Proyectos</Link>
-          <Link to="/register" className="btn btn-ghost">Publicar un Proyecto</Link>
+          <Link to="/request-project" className="btn btn-ghost">Publicar un Proyecto</Link>
         </div>
       </section>
 
@@ -80,8 +80,8 @@ export default function Home() {
             <h3 className="text-2xl font-extrabold text-ink">¿Listo para compartir tu proyecto?</h3>
             <p className="text-muted">Publícalo hoy y conecta con colaboradores.</p>
           </div>
-          <Link to="/projects/new" className="btn btn-primary inline-flex items-center gap-2">
-            Crear proyecto <ArrowRight size={18}/>
+          <Link to="/request-project" className="btn btn-primary inline-flex items-center gap-2">
+            Solicitar Proyecto <ArrowRight size={18}/>
           </Link>
         </div>
         <div className="pointer-events-none absolute -bottom-16 right-10 w-64 h-64 rounded-full bg-[rgba(108,138,228,.12)] blur-3xl" />
