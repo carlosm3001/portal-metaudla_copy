@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 const { testConnection } = require('./src/db/connection.cjs');
@@ -23,6 +24,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -41,6 +43,11 @@ app.use('/api/solicitudes', solicitudesRouter);
 // Basic route
 app.get('/', (req, res) => {
   res.send('Backend is running!');
+});
+
+// Catch-all route to serve index.html for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
 
 // Start server and run migrations
