@@ -31,8 +31,16 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
   const [selectedTechnologies, setSelectedTechnologies] = useState([]);
 
   useEffect(() => {
-    const initialTechs = project?.technologies ? project.technologies.split(',').map(t => t.trim()) : [];
-    setSelectedTechnologies(initialTechs);
+    if (project) {
+      setName(project.name || project.nombre || "");
+      setDescription(project.description || project.descripcion || "");
+      setParticipantes(project.participantes || "");
+      setGithubUrl(project.githubUrl || "");
+      setWebsiteUrl(project.websiteUrl || "");
+      setCategory(project.category || project.categoria || CATEGORIES[0]);
+      const initialTechs = (project.technologies || project.tecnologias) ? (project.technologies || project.tecnologias).split(',').map(t => t.trim()) : [];
+      setSelectedTechnologies(initialTechs);
+    }
   }, [project]);
 
   useEffect(() => {
@@ -65,8 +73,12 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const fd = new FormData();
-    if (project?.id) fd.append("id", project.id);
-    if (project?.imageUrl) fd.append("imageUrl", project.imageUrl);
+    if (project?.id) {
+      fd.append("id", project.id);
+      if (project.imageUrl) {
+        fd.append("imageUrl", project.imageUrl);
+      }
+    }
 
     fd.append("name", name.trim());
     fd.append("description", description.trim());
@@ -85,7 +97,7 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
   };
 
   return (
-    <form ref={ref} onSubmit={handleSubmit}>
+    <form ref={ref} onSubmit={handleSubmit} encType="multipart/form-data">
       <div className="p-4 md:p-6">
         <div className="flex items-start justify-between mb-5">
           <h3 className="text-lg md:text-xl font-bold text-ink">
@@ -107,12 +119,26 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
 
             <div>
               <label className="label">Imagen Principal</label>
-              <input type="file" accept="image/*" className="input" onChange={(e) => setMainImage(e.target.files?.[0] || null)} />
+              {project?.imageUrl && (
+                <div className="mb-4">
+                  <img src={`http://localhost:3001${project.imageUrl}`} alt="Imagen Principal Actual" className="w-full h-auto object-cover rounded-lg border border-border" />
+                </div>
+              )}
+              <input type="file" accept="image/*" className="input" name="projectImage" onChange={(e) => setMainImage(e.target.files?.[0] || null)} />
               <p className="helper mt-1">Sube la imagen que representará tu proyecto.</p>
             </div>
             <div>
               <label className="label">Imágenes de Galería (hasta 8)</label>
-              <input type="file" accept="image/*" multiple className="input" onChange={(e) => setGalleryImages(Array.from(e.target.files))} />
+              {project?.gallery && project.gallery.length > 0 && (
+                <div className="mb-4 grid grid-cols-3 gap-4">
+                  {project.gallery.map(image => (
+                    <div key={image.id}>
+                      <img src={`http://localhost:3001${image.imagenUrl}`} alt="Imagen de Galería" className="w-full h-auto object-cover rounded-lg border border-border" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <input type="file" accept="image/*" multiple className="input" name="galleryImages" onChange={(e) => setGalleryImages(Array.from(e.target.files))} />
               <p className="helper mt-1">Muestra más detalles de tu proyecto.</p>
             </div>
 

@@ -55,6 +55,8 @@ function Admin({ isLoggedIn, userRole }) {
   const [editingNews, setEditingNews] = useState(null); // Add editing news state
   const [isActivityLogModalOpen, setIsActivityLogModalOpen] = useState(false);
   const [selectedUserEmail, setSelectedUserEmail] = useState(null);
+  const [viewingRequest, setViewingRequest] = useState(null); // Nuevo estado para la solicitud que se está viendo
+  const [isViewRequestModalOpen, setIsViewRequestModalOpen] = useState(false); // Nuevo estado para el modal de detalles de solicitud
 
   const navigate = useNavigate();
 
@@ -278,6 +280,19 @@ function Admin({ isLoggedIn, userRole }) {
       setProjectRequests(prev => prev.map(r => r.id === id ? { ...r, estado } : r));
     } catch (err) {
       console.error("Error updating request", err);
+    }
+  };
+
+  const handleViewRequest = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/solicitudes/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      setViewingRequest(data);
+      setIsViewRequestModalOpen(true);
+    } catch (err) {
+      console.error("Error fetching request details", err);
+      setError('Error al cargar los detalles de la solicitud.');
     }
   };
 
@@ -607,6 +622,7 @@ function Admin({ isLoggedIn, userRole }) {
                       <td>{r.usuario_id}</td>
                       <td><span className={`badge badge-sm ${r.estado === 'pendiente' ? 'badge-warning' : r.estado === 'aprobado' ? 'badge-success' : 'badge-error'}`}>{r.estado}</span></td>
                       <td className="flex gap-2 py-2">
+                        <button className="btn btn-xs btn-info" onClick={() => handleViewRequest(r.id)}>Ver Detalles</button>
                         {r.estado === 'pendiente' && (
                           <>
                             <button className="btn btn-xs btn-success" onClick={() => handleRequestUpdate(r.id, 'aprobado')}>Aprobar</button>
@@ -646,6 +662,85 @@ function Admin({ isLoggedIn, userRole }) {
           logs={logs}
           userEmail={selectedUserEmail}
         />
+
+        {/* Modal para ver detalles de solicitud de proyecto */}
+        <Modal isOpen={isViewRequestModalOpen} onClose={() => setIsViewRequestModalOpen(false)} title="Detalles de Solicitud de Proyecto">
+          {viewingRequest && (
+            <div className="space-y-6 text-ink-secondary">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-base-100">
+                <div>
+                  <p className="font-semibold text-ink-primary mb-1">Nombre del Proyecto:</p>
+                  <p>{viewingRequest.nombre}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-ink-primary mb-1">Categoría:</p>
+                  <p>{viewingRequest.categoria}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-ink-primary mb-1">Semestre:</p>
+                  <p>{viewingRequest.semestre || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-ink-primary mb-1">Estado:</p>
+                  <span className={`badge ${viewingRequest.estado === 'pendiente' ? 'badge-warning' : viewingRequest.estado === 'aprobado' ? 'badge-success' : 'badge-error'}`}>{viewingRequest.estado}</span>
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-base-100">
+                <p className="font-semibold text-ink-primary mb-1">Descripción:</p>
+                <p className="whitespace-pre-wrap">{viewingRequest.descripcion || 'Sin descripción'}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-base-100">
+                <div>
+                  <p className="font-semibold text-ink-primary mb-1">URL de GitHub:</p>
+                  <p>{viewingRequest.githubUrl ? <a href={viewingRequest.githubUrl} target="_blank" rel="noopener noreferrer" className="link link-hover text-blue-500">{viewingRequest.githubUrl}</a> : 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-ink-primary mb-1">URL del Sitio Web:</p>
+                  <p>{viewingRequest.websiteUrl ? <a href={viewingRequest.websiteUrl} target="_blank" rel="noopener noreferrer" className="link link-hover text-blue-500">{viewingRequest.websiteUrl}</a> : 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-base-100">
+                <p className="font-semibold text-ink-primary mb-1">Participantes:</p>
+                <p>{viewingRequest.participantes || 'N/A'}</p>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-base-100">
+                <p className="font-semibold text-ink-primary mb-1">Tecnologías:</p>
+                <p>{viewingRequest.tecnologias || 'N/A'}</p>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-base-100">
+                <p className="font-semibold text-ink-primary mb-1">Solicitado por Usuario ID:</p>
+                <p>{viewingRequest.usuario_id}</p>
+              </div>
+
+              {viewingRequest.imagenUrl && (
+                <div className="p-4 border rounded-lg bg-base-100">
+                  <p className="font-semibold text-ink-primary mb-1">Imagen Principal:</p>
+                  <img src={`http://localhost:3001${viewingRequest.imagenUrl}`} alt="Imagen Principal" className="w-full h-48 object-cover rounded-lg mt-2 border border-base-300" />
+                </div>
+              )}
+              {viewingRequest.gallery && viewingRequest.gallery.length > 0 && (
+                <div className="p-4 border rounded-lg bg-base-100">
+                  <p className="font-semibold text-ink-primary mb-1">Imágenes de Galería:</p>
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mt-2">
+                    {viewingRequest.gallery.map((img, index) => (
+                      <div key={index} className="w-full h-24 overflow-hidden rounded-lg border border-base-300">
+                        <img src={`http://localhost:3001${img.imagenUrl}`} alt={`Galería ${index + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="mt-6 flex justify-end">
+            <button className="btn btn-ghost" onClick={() => setIsViewRequestModalOpen(false)}>Volver</button>
+          </div>
+        </Modal>
       </main>
     </div>
   );

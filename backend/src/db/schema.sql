@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS proyectos (
     websiteUrl VARCHAR(255),
     categoria_id INT,
     participantes TEXT,
-    semestre INT,
+    semestre VARCHAR(20),
     dificultad ENUM('Principiante', 'Intermedio', 'Avanzado'),
     likes INT DEFAULT 0,
     dislikes INT DEFAULT 0,
@@ -131,14 +131,24 @@ CREATE TABLE IF NOT EXISTS proyecto_solicitudes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
     descripcion TEXT,
+    imagenUrl VARCHAR(255),
     githubUrl VARCHAR(255),
     websiteUrl VARCHAR(255),
     participantes TEXT,
-    semestre INT,
+    semestre VARCHAR(20),
     usuario_id INT,
+    categoria VARCHAR(191),
+    tecnologias TEXT,
     estado ENUM('pendiente', 'aprobado', 'rechazado') DEFAULT 'pendiente',
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS proyecto_solicitud_imagenes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    solicitud_id INT NOT NULL,
+    imagenUrl VARCHAR(255) NOT NULL,
+    FOREIGN KEY (solicitud_id) REFERENCES proyecto_solicitudes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

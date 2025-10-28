@@ -10,7 +10,7 @@ export default function ProjectCard({ project }) {
       <div className="relative bg-brand-50">
         {imageUrl ? (
           <img
-            src={imageUrl.startsWith('http') ? imageUrl : `http://localhost:3001/${imageUrl}`}
+            src={imageUrl.startsWith('http') ? imageUrl : `http://localhost:3001${imageUrl}`}
             alt={name}
             className="w-full object-cover"
             style={{ aspectRatio: "4 / 3" }}

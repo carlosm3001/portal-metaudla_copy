@@ -22,7 +22,9 @@ export default function ProjectEditor() {
       const fetchProject = async () => {
         try {
           const response = await fetch(`http://localhost:3001/api/projects/${id}`, {
-            headers: { 'x-auth-token': localStorage.getItem('token') },
+            headers: { 
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
           });
           if (!response.ok) throw new Error('Proyecto no encontrado.');
           const data = await response.json();
@@ -45,7 +47,13 @@ export default function ProjectEditor() {
       const url = id
         ? `http://localhost:3001/api/projects/${id}`
         : 'http://localhost:3001/api/projects';
-      const response = await fetch(url, { method, headers: { 'x-auth-token': localStorage.getItem('token') }, body: formData });
+      const response = await fetch(url, { 
+        method, 
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('token')}` 
+        }, 
+        body: formData 
+      });
       if (!response.ok) throw new Error('Error al guardar el proyecto.');
       navigate('/admin'); // Volver al panel de admin
     } catch (err) {

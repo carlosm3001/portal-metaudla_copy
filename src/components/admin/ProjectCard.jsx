@@ -6,16 +6,27 @@ export default function ProjectCard({ project, onEdit, onDelete }) {
 
   return (
     <article className="card h-full flex flex-col overflow-hidden project-card">
-      {/* Imagen opcional */}
-      {/* <div className="relative">
-        {cover ? (
-          <img src={cover} alt="" className="w-full object-cover" style={{aspectRatio: "4 / 3"}} />
+      <div className="relative">
+        {project.imageUrl ? (
+          <>
+            {console.log('Rendering image for project:', project.name, 'imageUrl:', project.imageUrl, 'Type:', typeof project.imageUrl, 'Is Truthy:', !!project.imageUrl)}
+            <img
+              src={project.imageUrl.startsWith('http') ? project.imageUrl : `http://localhost:3001${project.imageUrl}`}
+              alt={project.name}
+              className="w-full object-cover"
+              style={{ aspectRatio: "4 / 3" }}
+              loading="lazy"
+            />
+          </>
         ) : (
-          <div className="w-full bg-[rgba(108,138,228,.16)] grid place-items-center" style={{aspectRatio: "4 / 3"}}>
+          <div
+            className="w-full bg-[rgba(108,138,228,.16)] grid place-items-center"
+            style={{ aspectRatio: "4 / 3" }}
+          >
             <span className="text-muted">Sin imagen</span>
           </div>
         )}
-      </div> */}
+      </div>
 
       <div className="p-4 flex flex-col gap-2 min-h-[180px]">
         <h3 className="text-lg font-bold text-ink leading-5 line-clamp-2">{name}</h3>

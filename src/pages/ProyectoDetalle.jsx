@@ -95,14 +95,30 @@ export default function ProyectoDetalle() {
             <p className="text-brand-600 font-semibold">{project.category}</p>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-ink mt-1">{project.name}</h1>
             <p className="text-muted mt-3 text-base">{project.description}</p>
-            <div className="mt-6">
-              <img
-                src={project.imageUrl ? `http://localhost:3001${project.imageUrl}` : 'https://placehold.co/800x500/8aa2f0/1f2937?text=Sin+Imagen'}
-                alt={project.name}
-                className="w-full h-auto object-cover rounded-xl border border-border"
-              />
-            </div>
-          </div>
+                          <div className="mt-6">
+                            <img
+                              src={project.imageUrl ? `http://localhost:3001${project.imageUrl}` : 'https://placehold.co/800x500/8aa2f0/1f2937?text=Sin+Imagen'}
+                              alt={project.name}
+                              className="w-full h-auto object-cover rounded-xl border border-border"
+                            />
+                          </div>
+            
+                          {project.gallery && project.gallery.length > 0 && (
+                            <div className="mt-6">
+                              <h2 className="text-2xl font-bold tracking-tight text-ink">Galería</h2>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                                {project.gallery.map(image => (
+                                  <a key={image.id} href={`http://localhost:3001${image.imagenUrl}`} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                      src={`http://localhost:3001${image.imagenUrl}`}
+                                      alt={project.name}
+                                      className="w-full h-auto object-cover rounded-lg border border-border"
+                                    />
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}          </div>
 
           <div className="card p-6 sm:p-8 comments-section">
             <h2 className="h-title text-2xl">Comentarios</h2>

@@ -55,13 +55,13 @@ const baseSelectQuery = `
 router.get('/', async (req, res) => {
   try {
     const { q, categoria_id, semestre, dificultad } = req.query;
-    let sql = 'SELECT p.*, c.nombre as categoria_nombre FROM proyectos p LEFT JOIN categorias c ON p.categoria_id = c.id';
+    let sql = `${baseSelectQuery}`;
     const conditions = [];
     const params = [];
 
     if (q) {
-      conditions.push('(p.nombre LIKE ? OR p.descripcion LIKE ?)');
-      params.push(`%${q}%`, `%${q}%`);
+      conditions.push('(p.nombre LIKE ? OR p.descripcion LIKE ? OR t.nombre LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`);
     }
     if (categoria_id) {
       conditions.push('p.categoria_id = ?');
@@ -79,6 +79,8 @@ router.get('/', async (req, res) => {
     if (conditions.length > 0) {
       sql += ' WHERE ' + conditions.join(' AND ');
     }
+
+    sql += ' GROUP BY p.id';
 
     const [rows] = await pool.query(sql, params);
     res.json(rows);
@@ -134,6 +136,7 @@ router.post('/', auth, authorize(['admin']), upload, async (req, res) => {
     }
 
     await connection.commit();
+
     await logAction(req.user.id, 'create_project', { projectId });
 
     res.status(201).json({ message: 'Proyecto creado exitosamente', projectId });
@@ -142,7 +145,9 @@ router.post('/', auth, authorize(['admin']), upload, async (req, res) => {
     console.error('Error creating project:', error.message);
     res.status(500).json({ message: 'Error al crear el proyecto', error: error.message });
   } finally {
-    if (connection) connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
