@@ -14,41 +14,11 @@ const TEAM = [
     bio: ""
   },
   {
-    id: 1,
-    name: "Juan Pérez",
-    role: "Administrador del portal",
-    email: "juan.perez@udla.edu.co",
-    github: "https://github.com/juanperez",
-    linkedin: "https://www.linkedin.com/in/juanperez",
-    photo: "/assets/team/juan.jpg",       // coloca aquí tu ruta real
-    bio: "Desarrollador full-stack. Apasionado por la educación y el software libre."
-  },
-  {
-    id: 2,
-    name: "Carlos Gómez",
-    role: "Coordinador de proyectos",
-    email: "carlos.gomez@udla.edu.co",
-    github: "https://github.com/carlosg",
-    linkedin: "https://www.linkedin.com/in/carlosg",
-    photo: "/assets/team/carlos.jpg",
-    bio: "Ing. de software. Enfocado en UX, accesibilidad y entrega continua."
-  },
-  {
     id: 6,
     name: "Docente Fredy Antonio Verástegui González",
     role: "Docente de apoyo",
     email: "fredy.verastegui@udla.edu.co", // Placeholder email
     bio: ""
-  },
-  {
-    id: 3,
-    name: "Luis Rodríguez",
-    role: "Soporte técnico y QA",
-    email: "luis.rodriguez@udla.edu.co",
-    github: "https://github.com/luisrod",
-    linkedin: "https://www.linkedin.com/in/luisrod",
-    photo: "/assets/team/luis.jpg",
-    bio: "QA / DevOps. Automatiza pruebas y mantiene la estabilidad de la plataforma."
   },
 ];
 
