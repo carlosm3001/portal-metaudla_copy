@@ -9,7 +9,7 @@ function RequestProject() {
 
   const handleSubmit = async (formData) => {
     try {
-      const response = await fetch("http://localhost:3001/api/solicitudes", {
+      const response = await fetch("https://meta-verso-carlos.b0falx.easypanel.host/api/solicitudes", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

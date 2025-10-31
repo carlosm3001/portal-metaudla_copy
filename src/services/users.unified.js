@@ -18,7 +18,7 @@ const _setUsersLocal = (users) => {
 
     export async function listUsersUnified(token) {
   try {
-    const response = await fetch('http://localhost:3001/api/users', {
+    const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/users', {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -40,7 +40,7 @@ const _setUsersLocal = (users) => {
 // Unified function to set user role
 export async function setUserRoleUnified(email, role, token) {
   try {
-    const response = await fetch(`http://localhost:3001/api/users/role`, {
+    const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/users/role`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export async function setUserRoleUnified(email, role, token) {
 export async function toggleUserActiveUnified(email, is_active, token) {
   try {
     
-    const response = await fetch(`http://localhost:3001/api/users/active`, {
+    const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/users/active`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

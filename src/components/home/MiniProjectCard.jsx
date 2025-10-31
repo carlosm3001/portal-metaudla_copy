@@ -11,7 +11,7 @@ export default function MiniProjectCard({ project }) {
         <div className="w-full h-32 bg-brand-50">
           {imageUrl && (
             <img 
-              src={imageUrl.startsWith('http') ? imageUrl : `http://localhost:3001/${imageUrl}`} 
+              src={imageUrl.startsWith('http') ? imageUrl : `https://meta-verso-carlos.b0falx.easypanel.host/${imageUrl}`} 
               alt={name} 
               className="w-full h-full object-cover" 
             />

@@ -84,7 +84,7 @@ function Admin({ isLoggedIn, userRole }) {
 
       setLoading(true);
 
-      const response = await fetch('http://localhost:3001/api/projects', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/projects', { headers: { 'Authorization': `Bearer ${token}` } });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -104,7 +104,7 @@ function Admin({ isLoggedIn, userRole }) {
 
     try {
 
-      const response = await fetch('http://localhost:3001/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -126,7 +126,7 @@ function Admin({ isLoggedIn, userRole }) {
 
       setNewsLoading(true);
 
-      const response = await fetch('http://localhost:3001/api/news', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/news', { headers: { 'Authorization': `Bearer ${token}` } });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -155,11 +155,11 @@ function Admin({ isLoggedIn, userRole }) {
         setNewsLoading(true);
 
         const [projectsData, usersData, newsData, logsData, requestsData] = await Promise.all([
-          fetch('http://localhost:3001/api/projects', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
+          fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/projects', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
           listUsersUnified(token),
-          fetch('http://localhost:3001/api/news', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
+          fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/news', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
           listLogsUnified(100),
-          fetch('http://localhost:3001/api/solicitudes', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
+          fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/solicitudes', { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json()),
         ]);
 
         setProjects(projectsData);
@@ -201,8 +201,8 @@ function Admin({ isLoggedIn, userRole }) {
     try {
       const method = formData.get('id') ? 'PUT' : 'POST';
       const url = formData.get('id')
-        ? `http://localhost:3001/api/projects/${formData.get('id')}`
-        : 'http://localhost:3001/api/projects';
+        ? `https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${formData.get('id')}`
+        : 'https://meta-verso-carlos.b0falx.easypanel.host/api/projects';
       const response = await fetch(url, { method, headers: { 'Authorization': `Bearer ${token}` }, body: formData });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
@@ -218,7 +218,7 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteProject = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
       try {
-        await fetch(`http://localhost:3001/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
 
         fetchProjects(); // Recargar
       } catch (err) { setError('Error al eliminar el proyecto.'); }
@@ -228,7 +228,7 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteUser = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        await fetch(`http://localhost:3001/api/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
 
         fetchUsers(); // Recargar
       } catch (err) { setUsersError('Error al eliminar el usuario.'); }
@@ -239,8 +239,8 @@ function Admin({ isLoggedIn, userRole }) {
     try {
       const method = formData.get('id') ? 'PUT' : 'POST';
       const url = formData.get('id')
-        ? `http://localhost:3001/api/news/${formData.get('id')}`
-        : 'http://localhost:3001/api/news';
+        ? `https://meta-verso-carlos.b0falx.easypanel.host/api/news/${formData.get('id')}`
+        : 'https://meta-verso-carlos.b0falx.easypanel.host/api/news';
       const response = await fetch(url, { 
         method, 
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
@@ -263,7 +263,7 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteNews = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
       try {
-        await fetch(`http://localhost:3001/api/news/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/news/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
 
         fetchNews(); // Recargar
       } catch (err) { setNewsError('Error al eliminar la noticia.'); }
@@ -272,7 +272,7 @@ function Admin({ isLoggedIn, userRole }) {
 
   const handleRequestUpdate = async (id, estado) => {
     try {
-      await fetch(`http://localhost:3001/api/solicitudes/${id}`, { 
+      await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/solicitudes/${id}`, { 
         method: 'PUT', 
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ estado })
@@ -285,7 +285,7 @@ function Admin({ isLoggedIn, userRole }) {
 
   const handleViewRequest = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/solicitudes/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/solicitudes/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setViewingRequest(data);

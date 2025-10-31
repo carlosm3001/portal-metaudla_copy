@@ -16,7 +16,7 @@ export default function Home() {
   useEffect(() => {
     const fetchRecentProjects = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/projects');
+        const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/projects');
         if (!response.ok) throw new Error('Error fetching projects');
         const data = await response.json();
         setRecentProjects(data.slice(0, 4));

@@ -16,7 +16,7 @@ export default function CommunityShowcase({ items = DEMO }) {
         <article key={p.id} className="card overflow-hidden project-mini hover:translate-y-[-2px] transition">
           <div className="bg-brand-50">
             {p.imageUrl ? (
-              <img src={p.imageUrl.startsWith('http') ? p.imageUrl : `http://localhost:3001/${p.imageUrl}`} alt={p.name} className="w-full object-cover" style={{aspectRatio:'4/3'}} loading="lazy"/>
+              <img src={p.imageUrl.startsWith('http') ? p.imageUrl : `https://meta-verso-carlos.b0falx.easypanel.host/${p.imageUrl}`} alt={p.name} className="w-full object-cover" style={{aspectRatio:'4/3'}} loading="lazy"/>
             ) : (
               <div className="w-full grid place-items-center text-muted" style={{aspectRatio:'4/3'}}>Sin imagen</div>
             )}

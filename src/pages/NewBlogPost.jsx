@@ -19,7 +19,7 @@ export default function NewBlogPost() {
 
 
     try {
-      const response = await fetch('http://localhost:3001/api/blog', {
+      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/blog', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -41,7 +41,7 @@ export default function Profile() {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/users/me', {
+      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/users/me', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

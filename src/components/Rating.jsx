@@ -27,7 +27,7 @@ export default function Rating({ projectId, onRatingSuccess }) {
         throw new Error('Debes iniciar sesión para calificar.');
       }
 
-      const response = await fetch(`http://localhost:3001/api/projects/${projectId}/rate`, {
+      const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${projectId}/rate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

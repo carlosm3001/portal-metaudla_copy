@@ -47,7 +47,7 @@ const RequestProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, re
   useEffect(() => {
     const fetchTechs = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/technologies');
+        const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/technologies');
         const data = await response.json();
         setAvailableTechnologies(data);
       } catch (error) {

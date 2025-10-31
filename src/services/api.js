@@ -6,7 +6,7 @@
 import * as projectActionsApi from './projects.dev.js';
 import { logActivity } from './activityLog.dev.js';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://meta-verso-carlos.b0falx.easypanel.host/api';
 
 // --- Auth API ------------------------------------------------------------------
 

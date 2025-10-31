@@ -13,7 +13,7 @@ export default function Blog() {
     const fetchBlogPosts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/blog');
+        const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/blog');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setPosts(data);

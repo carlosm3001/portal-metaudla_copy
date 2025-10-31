@@ -11,7 +11,7 @@ export default function NewsDetail() {
     const fetchNewsItem = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3001/api/news/${id}`);
+        const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/news/${id}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setNewsItem(data);

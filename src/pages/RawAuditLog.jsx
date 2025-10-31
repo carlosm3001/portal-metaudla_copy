@@ -11,7 +11,7 @@ export default function RawAuditLog() {
     const fetchRawLogs = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:3001/api/audit/raw", {
+        const response = await fetch("https://meta-verso-carlos.b0falx.easypanel.host/api/audit/raw", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) {

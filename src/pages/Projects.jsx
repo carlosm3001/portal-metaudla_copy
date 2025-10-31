@@ -21,8 +21,8 @@ export default function Projects() {
     const fetchFilters = async () => {
       try {
         const [categoriesRes, technologiesRes] = await Promise.all([
-          fetch('http://localhost:3001/api/categories'),
-          fetch('http://localhost:3001/api/technologies'),
+          fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/categories'),
+          fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/technologies'),
         ]);
 
         const categoriesData = await categoriesRes.json();
@@ -53,7 +53,7 @@ export default function Projects() {
         // If a dedicated technology filter is needed, the backend API needs adjustment.
         // For now, we'll rely on 'q' for technology search if the user types it.
 
-        const url = `http://localhost:3001/api/projects?${params.toString()}`;
+        const url = `https://meta-verso-carlos.b0falx.easypanel.host/api/projects?${params.toString()}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();

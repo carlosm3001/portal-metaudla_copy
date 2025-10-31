@@ -21,7 +21,7 @@ export default function ProjectEditor() {
     if (id) {
       const fetchProject = async () => {
         try {
-          const response = await fetch(`http://localhost:3001/api/projects/${id}`, {
+          const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${id}`, {
             headers: { 
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
@@ -45,8 +45,8 @@ export default function ProjectEditor() {
     try {
       const method = id ? 'PUT' : 'POST';
       const url = id
-        ? `http://localhost:3001/api/projects/${id}`
-        : 'http://localhost:3001/api/projects';
+        ? `https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${id}`
+        : 'https://meta-verso-carlos.b0falx.easypanel.host/api/projects';
       const response = await fetch(url, { 
         method, 
         headers: { 

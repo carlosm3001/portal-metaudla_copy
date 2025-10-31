@@ -14,7 +14,7 @@ export default function BlogPostDetail() {
     const fetchBlogPost = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3001/api/blog/${id}`);
+        const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/blog/${id}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setPost(data);
@@ -30,7 +30,7 @@ export default function BlogPostDetail() {
   const handleDelete = async () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
       try {
-        const response = await fetch(`http://localhost:3001/api/blog/${id}`, {
+        const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/blog/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` },
         });

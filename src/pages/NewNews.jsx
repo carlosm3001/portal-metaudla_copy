@@ -22,7 +22,7 @@ export default function NewNews() {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/news', {
+      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/news', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

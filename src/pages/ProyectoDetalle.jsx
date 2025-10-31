@@ -22,7 +22,7 @@ export default function ProyectoDetalle() {
       try {
         setLoading(true);
         const [projectRes, actionsRes] = await Promise.all([
-          fetch(`http://localhost:3001/api/projects/${id}`), // Assuming this endpoint still exists to get main project data
+          fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${id}`), // Assuming this endpoint still exists to get main project data
           api.listActions(id)
         ]);
 

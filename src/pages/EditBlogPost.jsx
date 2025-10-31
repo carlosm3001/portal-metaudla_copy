@@ -15,7 +15,7 @@ export default function EditBlogPost() {
   useEffect(() => {
     const fetchBlogPost = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/blog/${id}`);
+        const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/blog/${id}`);
         if (!response.ok) throw new Error('Error al cargar la publicación.');
         const data = await response.json();
         setTitulo(data.titulo);
@@ -34,7 +34,7 @@ export default function EditBlogPost() {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/blog/${id}`, {
+      const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/blog/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
