@@ -6,6 +6,7 @@ const dbConfig = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -16,11 +17,20 @@ const pool = mysql.createPool(dbConfig);
 
 async function testConnection() {
   try {
+
+      console.log(dbConfig);
+      console.log(process.env.DB_HOST);
+      console.log(process.env.DB_USER);
+      console.log(process.env.DB_PASSWORD);
+      console.log(process.env.DB_NAME);
+      console.log(process.env.DB_PORT);
     // Conexión inicial sin base de datos para crearla si no existe
     const initialConnection = await mysql.createConnection({
-      host: dbConfig.host,
-      user: dbConfig.user,
-      password: dbConfig.password,
+        host: dbConfig.host,
+        user: dbConfig.user,
+        password: dbConfig.password,
+        port: dbConfig.port,
+        ssl: { rejectUnauthorized: false }
     });
 
     await initialConnection.query(`CREATE DATABASE IF NOT EXISTS 
