@@ -1,0 +1,6 @@
+.radial-hero{
+  background:
+    radial-gradient(900px 450px at 15% -10%, rgba(var(--brand-primary-rgb),.12), transparent 60%),
+    radial-gradient(900px 450px at 85% -10%, rgba(var(--brand-river-rgb),.10), transparent 60%),
+    var(--brand-bg);
+}

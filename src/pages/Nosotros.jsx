@@ -1,33 +1,76 @@
-import React from 'react';
-import TeamSection from '../components/About/TeamSection';
+import "./../styles/hero.css";
+import TeamGrid from "../components/About/TeamGrid";
+// Usa UNA de las dos opciones de fotos:
+import { PHOTOS_EXACT as PHOTOS } from "../photos"; // crea este pequeño módulo o pega las constantes aquí
+// import { PHOTOS } from "../photos-normalized";
+
+const members = [
+  {
+    photo: PHOTOS.carlos,
+    name: "Carlos Mario Villegas Artunduaga",
+    role: "Administración",
+    bio: "Creador de la web. Estudiante de la Universidad de la Amazonía, 8.º semestre.",
+    email: "carlos.villegas@udla.edu.co",
+    tags: ["React","Vite","Tailwind"]
+  },
+  {
+    photo: PHOTOS.edwin,
+    name: "Ingeniero Eduardo Millán Rojas",
+    role: "Administración",
+    bio: "Ingeniero revisor, supervisor y colaborador del proyecto.",
+    email: "eduardo.millan@udla.edu.co",
+    tags: ["Supervisión","DevOps"]
+  },
+  {
+    photo: PHOTOS.fredy,
+    name: "Docente Fredy Antonio Verástegui González",
+    role: "Administración",
+    bio: "Docente de apoyo.",
+    email: "fredy.verastegui@udla.edu.co",
+    tags: ["Docencia","Asesoría"]
+  },
+];
 
 export default function Nosotros() {
   return (
-    <main className="container mx-auto max-w-[960px] px-4 md:px-6 py-10">
-      {/* HERO – banda suave superior */}
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-[#EEF2FF] to-white p-8 mb-8">
-        <div className="max-w-[920px]">
-          <h1 className="text-4xl font-extrabold text-ink mb-2">Sobre Meta-Uniamazonia</h1>
-          <p className="text-muted text-lg leading-relaxed">
-            La vitrina digital para visibilizar, conectar y potenciar los proyectos de la Universidad de la Amazonia.
-          </p>
-        </div>
-        {/* acentos decorativos */}
-        <div className="pointer-events-none absolute -top-10 -right-10 w-72 h-72 rounded-full bg-[rgba(108,138,228,.17)] blur-3xl" />
+    <main className="mx-auto max-w-7xl px-4 py-10 space-y-8">
+      {/* HERO */}
+      <section className="radial-hero rounded-3xl border border-slate-200 shadow-sm p-6 md:p-10">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-text">Sobre ExploraUDLA</h1>
+        <p className="mt-2 text-muted md:text-lg max-w-3xl">
+          La vitrina digital para visibilizar, conectar y potenciar los proyectos de la Universidad de la Amazonía.
+        </p>
       </section>
 
-      <div className="prose lg:prose-lg mx-auto text-muted">
-        <h2 className="text-2xl mt-8 text-ink">Nuestra Misión</h2>
-        <ul>
-          <li><strong>Visibilizar:</strong> Ofrecer un espacio centralizado y accesible donde cada proyecto, sin importar su escala, pueda brillar y ser descubierto.</li>
-          <li><strong>Conectar:</strong> Facilitar la colaboración interdisciplinaria, permitiendo que estudiantes de diferentes facultades se unan para crear soluciones más robustas e innovadoras.</li>
-          <li><strong>Generar Impacto:</strong> Destacar cómo los proyectos de la Universidad de la Amazonia contribuyen a la sociedad, la tecnología y el conocimiento.</li>
-        </ul>
+      {/* MISIÓN y VISIÓN */}
+      <section className="grid md:grid-cols-2 gap-6">
+        <div className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-text">Nuestra Misión</h2>
+          <p className="mt-2 text-text leading-relaxed">
+            Visibilizar, conectar y potenciar los proyectos de la Universidad de la Amazonía mediante una plataforma abierta,
+            accesible y colaborativa. Nuestro objetivo es facilitar que estudiantes y docentes publiquen sus iniciativas,
+            encuentren compañeros de trabajo, reciban retroalimentación oportuna y transformen sus ideas en resultados con
+            impacto social y académico.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-text">Nuestra Visión</h2>
+          <p className="mt-2 text-text leading-relaxed">
+            Ser la vitrina digital de referencia para la innovación universitaria en la región amazónica. Aspiramos a consolidar
+            una comunidad interdisciplinaria que comparte conocimientos, promueve la ciencia abierta y construye soluciones
+            tecnológicas, educativas y culturales que mejoren la vida de las personas.
+          </p>
+        </div>
+      </section>
 
-        <p>Desde aplicaciones móviles y software educativo hasta investigaciones científicas, Meta-Uniamazonia es un crisol de disciplinas unidas por un objetivo común: innovar y construir el futuro.</p>
-      </div>
-
-      <TeamSection />
+      {/* EQUIPO */}
+      <section>
+        <div className="flex items-baseline justify-between flex-wrap gap-2 mb-3">
+          <h2 className="text-2xl font-bold text-text">Equipo de expertos</h2>
+          <p className="text-muted">Conoce a los administradores que mantienen ExploraUDLA.</p>
+        </div>
+        <TeamGrid members={members} />
+      </section>
     </main>
   );
 }

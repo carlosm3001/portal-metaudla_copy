@@ -1,0 +1,14 @@
+:root{
+  --udla-primary:#0B7D3B;
+  --udla-leaf:#4CAF50;
+  --udla-lime:#A7D129;
+  --udla-river:#2D7DD2;
+  --udla-bg:#F5FAF6;
+  --udla-card:#FFFFFF;
+  --udla-text:#0F172A;
+}
+.udla-hero{
+  background:
+    radial-gradient(700px 320px at 12% -10%, color-mix(in srgb, var(--udla-primary) 20%, transparent), transparent 60%),
+    radial-gradient(700px 320px at 88% -10%, color-mix(in srgb, var(--udla-leaf) 18%, transparent), transparent 60%);
+}

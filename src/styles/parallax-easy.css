@@ -1,0 +1,31 @@
+.parallax {
+  position: relative;
+  min-height: 60vh;             /* ajusta alto */
+  background-size: cover;
+  background-position: center;
+  border-radius: 1rem;       /* rounded-xl */
+  overflow: hidden;
+}
+@media (max-width: 768px) { /* Adjust for mobile */
+  .parallax {
+    min-height: 40vh;
+  }
+}
+.parallax-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0,0,0,.15), rgba(0,0,0,.35));
+}
+.parallax-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+/* Accesibilidad: sin animación si reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .parallax { will-change: auto; }
+}

@@ -1,0 +1,46 @@
+:root {
+  --brand-primary:   #0B7D3B;
+  --brand-primary-rgb: 11, 125, 59;
+  --brand-leaf:      #4CAF50;
+  --brand-leaf-rgb: 76, 175, 80;
+  --brand-lima:      #A7D129;
+  --brand-lima-rgb: 167, 209, 41;
+  --brand-river:     #2D7DD2;
+  --brand-river-rgb: 45, 125, 210;
+  --brand-bg:        #F8FAFC;  /* fondo general */
+  --brand-bg-rgb: 248, 250, 252;
+  --brand-card:      #FFFFFF;  /* tarjetas */
+  --brand-card-rgb: 255, 255, 255;
+  --brand-text:      #0F172A;  /* texto principal */
+  --brand-text-rgb: 15, 23, 42;
+  --brand-muted:     #475569;  /* texto secundario */
+  --brand-muted-rgb: 71, 85, 105;
+  --brand-light-green-border: #E6F3E8;
+  --ring:            rgba(11,125,59,.45);
+}
+
+.dark {
+  --brand-primary:   #0A6F35;
+  --brand-primary-rgb: 10, 111, 53;
+  --brand-leaf:      #3FA447;
+  --brand-leaf-rgb: 63, 164, 71;
+  --brand-lima:      #9CC72A;
+  --brand-lima-rgb: 156, 199, 42;
+  --brand-river:     #2B73BF;
+  --brand-river-rgb: 43, 115, 191;
+  --brand-bg:        #0B0F14;
+  --brand-bg-rgb: 11, 15, 20;
+  --brand-card:      #0F172A;
+  --brand-card-rgb: 15, 23, 42;
+  --brand-text:      #E5E7EB;
+  --brand-text-rgb: 229, 231, 235;
+  --brand-muted:     #94A3B8;
+  --brand-muted-rgb: 148, 163, 184;
+  --brand-light-green-border: #1A2B2C; /* Darker shade for dark mode */
+  --ring:            rgba(156, 207, 52, .45);
+}
+
+html, body {
+  background: var(--brand-bg);
+  color: var(--brand-text);
+}

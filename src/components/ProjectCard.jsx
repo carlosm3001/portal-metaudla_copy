@@ -1,17 +1,30 @@
-export default function ProjectCard({ cover, title, excerpt, techs = [], href }){
+import { useInView } from 'react-intersection-observer';
+
+export default function ProjectCard({ project, onClick }) {
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
   return (
-    <article className="card p-6 hover:-translate-y-1 transition">
-      {cover && <img src={cover} alt="" className="rounded-xl h-40 w-full object-cover mb-4" />}
-      <h3 className="text-lg font-bold text-ink">{title}</h3>
-      {excerpt && <p className="text-sm text-muted mt-1">{excerpt}</p>}
-      {techs?.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {techs.map(t => <span key={t} className="pill">{t}</span>)}
+    <article
+      ref={ref}
+      className={`bg-white rounded-lg shadow-md overflow-hidden transition-all duration-500 ease-out transform-gpu 
+        ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      onClick={() => onClick(project.id)}
+    >
+      <div className="relative group h-48">
+        <img
+          src={project.imageUrl}
+          alt={project.title}
+          className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out">
+          <h3 className="absolute bottom-3 left-4 text-white text-lg font-bold">
+            {project.title}
+          </h3>
         </div>
-      )}
-      <div className="mt-4 flex items-center gap-2">
-        <button className="btn btn-ghost btn-xs">0 votos</button>
-        <a href={href} className="btn btn-primary btn-xs">Ver detalle</a>
       </div>
     </article>
   );

@@ -337,3 +337,11 @@ footer nav a:hover {
 
 .project-mini img{ transition: transform .3s ease; }
 .project-mini:hover img{ transform: scale(1.02); }
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px #6e5494; }
+  50% { box-shadow: 0 0 12px #6e5494; }
+}
+.hover\:animate-glow:hover {
+  animation: pulseGlow 1s ease-in-out infinite alternate;
+}

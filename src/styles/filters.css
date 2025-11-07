@@ -1,0 +1,15 @@
+/* Scrollbar sutil para chips (WebKit) */
+.chips-scroll::-webkit-scrollbar { height: 6px; }
+.chips-scroll::-webkit-scrollbar-track { background: transparent; }
+.chips-scroll::-webkit-scrollbar-thumb {  background: rgba(99,102,241,.25); border-radius: 9999px;}
+
+/* Sombra suave para botones activos */
+.shadow-indigo { box-shadow: 0 6px 16px var(--brand-primary); }
+
+/* Transiciones más suaves */
+.flt-transition { transition: all 180ms ease-out; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .flt-transition { transition: none; }
+}

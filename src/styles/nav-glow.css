@@ -1,0 +1,18 @@
+/* Glow suave para nav (light/dark) */
+.hover\:shadow-navglow:hover {
+  box-shadow:
+    0 2px 8px rgba(99, 102, 241, 0.20),   /* indigo-500 */
+    0 6px 18px rgba(99, 102, 241, 0.12);
+}
+
+/* Respeto a reduced motion */
+ @media (prefers-reduced-motion: reduce) {
+  .hover\:shadow-navglow:hover {
+    box-shadow:
+      0 2px 8px rgba(99, 102, 241, 0.18),
+      0 6px 12px rgba(99, 102, 241, 0.10);
+  }
+  .hover\:scale-\[1\.02\]:hover {
+    transform: none;
+  }
+}

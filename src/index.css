@@ -4,4 +4,4 @@
 @tailwind utilities;
 
 /* (opcional) resets suaves */
-html, body { height: 100%; }
+html, body { /* height: 100%; */ }

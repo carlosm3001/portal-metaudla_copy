@@ -1,0 +1,25 @@
+/* Shake */
+@keyframes btn-shake {
+  0%   { transform: translateX(0) rotate(0deg); }
+  20%  { transform: translateX(-2px) rotate(-1deg); }
+  40%  { transform: translateX(2px) rotate(1deg); }
+  60%  { transform: translateX(-1.5px) rotate(-0.8deg); }
+  80%  { transform: translateX(1.5px) rotate(0.8deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+.btn-shake { animation: btn-shake 420ms cubic-bezier(.2,.8,.2,1); }
+
+/* Icon slide/bounce on hover */
+.btn-logout:hover .btn-logout__icon {
+  transform: translateX(6px);
+}
+.btn-logout__icon {
+  transition: transform 220ms ease;
+}
+
+/* Gradient hover helper */
+.btn-logout:hover {
+  background-image: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-leaf) 50%, var(--brand-river) 100%);
+  color: #fff;
+  border-color: transparent;
+}

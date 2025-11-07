@@ -3,6 +3,7 @@ import Footer from "../components/Footer";
 import { Outlet } from "react-router-dom";
 import ErrorBoundary from "../components/ErrorBoundary";
 
+// Force reload
 export default function RootLayout(){
   return (
     <ErrorBoundary>

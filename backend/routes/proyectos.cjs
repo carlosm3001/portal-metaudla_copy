@@ -68,7 +68,7 @@ router.get('/', async (req, res) => {
       params.push(categoria_id);
     }
     if (semestre) {
-      conditions.push('p.semestre = ?');
+      conditions.push('CAST(p.semestre AS CHAR) = ?');
       params.push(semestre);
     }
     if (dificultad) {

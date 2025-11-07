@@ -1,44 +1,65 @@
+/** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
+        // Colores base usando variables CSS
+        primary: "var(--brand-primary)",
+        leaf: "var(--brand-leaf)",
+        lima: "var(--brand-lima)",
+        river: "var(--brand-river)",
+        
+        // Colores funcionales
+        bg: "var(--brand-bg)",
+        card: "var(--brand-card)",
+        text: "var(--brand-text)",
+        muted: "var(--brand-muted)",
+
+        // Colores existentes que pueden ser mapeados o eliminados si no se usan
+        // Mantengo algunos para evitar romper componentes existentes que no se refactoricen
         brand: {
-          50:  "#f2f6ff",
-          100: "#e6edff",
-          200: "#cddcff",
-          300: "#aabff8",
-          400: "#8aa2f0",
-          500: "#6c8ae4",
-          600: "#526fcb",
-          700: "#425aa7",
-          800: "#364a88",
-          900: "#2d3e72"
+          50:  "#eef2ff", // Ejemplo de mapeo a un tono de índigo si se mantiene
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81"
         },
-        accent: {
-          50:  "#fff4f7",
-          100: "#ffe8ee",
-          200: "#ffd1dd",
-          300: "#fbb8c9",
-          400: "#f79fb5",
-          500: "#f18aa6",
-          600: "#d66d88",
-          700: "#b8576f",
-          800: "#964656",
-          900: "#7c3946"
+        indigo: {
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81"
         },
-        mint:    "#cfe9df",
-        peach:   "#ffd8b5",
-        lavender:"#e6dcfb",
-        sky:     "#cfe6fb",
-        ink:     "#1f2937",
-        muted:   "#6b7280",
-        bg:      "#fafbff",
-        surface: "#ffffff",
-        border:  "#e5e7eb",
+        slate: {
+          50: "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#cbd5e1",
+          400: "#94a3b8",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+          800: "#1e293b",
+          900: "#0f172a"
+        },
         danger:  "#ef4444",
         success: "#16a34a",
         warning: "#f59e0b",
+      },
+      ringColor: {
+        DEFAULT: "var(--ring)",
       },
       borderRadius: { DEFAULT: '0.75rem', lg: '1rem', xl: '1.25rem', '2xl': '1.5rem' },
       boxShadow: {
