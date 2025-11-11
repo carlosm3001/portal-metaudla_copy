@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/project-flip.css";
+import { API_URL } from "../services/api";
 
 export default function ProjectCardFlip({ project }) {
   const [flipped, setFlipped] = useState(false);
+  const API_BASE_URL = API_URL.replace('/api', '');
 
   // Manejo para dispositivos táctiles (mobile)
   const handleTouch = (e) => {
@@ -47,10 +49,10 @@ export default function ProjectCardFlip({ project }) {
       <div className="card3d-inner aspect-[16/9]">
         {/* FRONT */}
         <div className="face front">
-          <img src={project.imageUrl} alt={project.title} loading="lazy" />
+          <img src={project.imageUrl ? `${API_BASE_URL}${project.imageUrl}` : 'https://via.placeholder.com/400x225?text=No+Image'} alt={project.name} loading="lazy" />
           <div className="absolute bottom-3 left-4 right-4 z-10">
             <h3 className="text-white font-bold text-lg drop-shadow">
-              {project.title}
+              {project.name}
             </h3>
           </div>
         </div>
@@ -59,14 +61,14 @@ export default function ProjectCardFlip({ project }) {
         <div className="face back">
           <div className="p-5 md:p-6 text-center space-y-3">
             <h3 className="text-white text-lg font-semibold">
-              {project.title}
+              {project.name}
             </h3>
-            {project.summary && (
+            {project.description && (
               <p
                 className="text-white/85 text-sm leading-relaxed line-clamp-3"
-                title={project.summary}
+                title={project.description}
               >
-                {project.summary}
+                {project.description}
               </p>
             )}
 

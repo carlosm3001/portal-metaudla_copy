@@ -6,7 +6,7 @@
 import * as projectActionsApi from './projects.dev.js';
 import { logActivity } from './activityLog.dev.js';
 
-const API_URL = 'https://meta-verso-carlos.b0falx.easypanel.host/api';
+export const API_URL = 'https://meta-verso-carlos.b0falx.easypanel.host/api';
 
 // --- Auth API ------------------------------------------------------------------
 
@@ -173,6 +173,8 @@ export const replyThread = async (threadId, { content, user, token }) => {
   };
 };
 
+
+
 // --- News API ------------------------------------------------------------------
 
 export const createNews = async (newsData, token) => {
@@ -221,7 +223,128 @@ export const deleteNews = async (id, token) => {
   return await response.json();
 };
 
+// --- Projects API --------------------------------------------------------------
+
+export const getProjects = async (filters = {}) => {
+
+  const params = new URLSearchParams();
+
+  if (filters.limit) {
+
+    params.append('limit', filters.limit);
+
+  }
+
+  // Add other filters here as needed in the future
+
+
+
+  const query = params.toString();
+
+  const url = query ? `${API_URL}/projects?${query}` : `${API_URL}/projects`;
+
+
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+
+    throw new Error('Error al cargar los proyectos');
+
+  }
+
+  return await response.json();
+
+};
+
+export const getProjectById = async (id) => {
+  const response = await fetch(`${API_URL}/projects/${id}`);
+  if (!response.ok) {
+    throw new Error('Error al cargar el proyecto');
+  }
+  return await response.json();
+};
+
+export const createProject = async (formData, token) => {
+  const response = await fetch(`${API_URL}/projects`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear el proyecto');
+  }
+  return await response.json();
+};
+
+export const updateProject = async (id, formData, token) => {
+  const response = await fetch(`${API_URL}/projects/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar el proyecto');
+  }
+  return await response.json();
+};
+
+export const deleteProject = async (id, token) => {
+  const response = await fetch(`${API_URL}/projects/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al eliminar el proyecto');
+  }
+  return await response.json();
+};
+
+export const getMyRating = async (projectId, token) => {
+  const response = await fetch(`${API_URL}/projects/${projectId}?rating=user`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al obtener la calificación');
+  }
+  return await response.json();
+};
+
+export const rateProject = async (projectId, rating, token) => {
+  const response = await fetch(`${API_URL}/projects/${projectId}/rate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ rating }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al calificar el proyecto');
+  }
+  return await response.json();
+};
+
+
 // --- Project Actions (Votes, Comments) -----------------------------------------
+
 export const listActions = projectActionsApi.listActions;
 export const addComment = projectActionsApi.addComment;
-export const addVote = projectActionsApi.addVote;

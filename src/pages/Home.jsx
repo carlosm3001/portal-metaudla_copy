@@ -1,10 +1,32 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getProjects } from "../services/api";
+import ProjectReel from "../components/home/ProjectReel";
 
 const BASE = import.meta.env.BASE_URL || "/";
 
 export default function Home() {
+  const [recentProjects, setRecentProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecentProjects = async () => {
+      try {
+        setLoading(true);
+        const projects = await getProjects({ limit: 4 });
+        setRecentProjects(projects);
+      } catch (error) {
+        console.error("Failed to fetch recent projects:", error);
+        // Handle error silently for this non-critical component
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecentProjects();
+  }, []);
+
   return (
-    <main className="flex flex-col items-center space-y-8 py-10">
+    <main className="flex flex-col items-center space-y-8 pb-10">
       {/* Bloque 1 */}
       <section className="w-full max-w-6xl mt-6 md:mt-8">
         <div className="relative rounded-2xl overflow-hidden shadow-lg">
@@ -24,6 +46,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <ProjectReel projects={recentProjects} />
 
       <section className="w-full max-w-5xl px-6 md:px-0">
         <div className="bg-white border-[var(--brand-light-green-border)] rounded-2xl p-8 shadow-sm text-center md:text-left">

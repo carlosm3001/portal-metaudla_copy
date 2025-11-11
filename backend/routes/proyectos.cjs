@@ -54,7 +54,7 @@ const baseSelectQuery = `
 // GET all projects
 router.get('/', async (req, res) => {
   try {
-    const { q, categoria_id, semestre, dificultad } = req.query;
+    const { q, categoria_id, semestre, dificultad, limit } = req.query;
     let sql = `${baseSelectQuery}`;
     const conditions = [];
     const params = [];
@@ -80,7 +80,12 @@ router.get('/', async (req, res) => {
       sql += ' WHERE ' + conditions.join(' AND ');
     }
 
-    sql += ' GROUP BY p.id';
+    sql += ' GROUP BY p.id ORDER BY p.creado_en DESC';
+
+    if (limit) {
+      sql += ' LIMIT ?';
+      params.push(parseInt(limit, 10));
+    }
 
     const [rows] = await pool.query(sql, params);
     res.json(rows);
@@ -90,9 +95,34 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET single project with gallery
-router.get('/:id', async (req, res) => {
+// GET single project with gallery OR user's rating for it
+router.get('/:id', auth, async (req, res) => {
   const { id } = req.params;
+  const { id: usuario_id } = req.user || {};
+  const { rating } = req.query;
+
+  // Handle request for user-specific rating
+  if (rating === 'user') {
+    if (!usuario_id) {
+      return res.status(401).json({ message: 'No autenticado' });
+    }
+    try {
+      const [rows] = await pool.query(
+        'SELECT calificacion FROM calificaciones WHERE proyecto_id = ? AND usuario_id = ?',
+        [id, usuario_id]
+      );
+      if (rows.length > 0) {
+        return res.json({ rating: rows[0].calificacion });
+      } else {
+        return res.json({ rating: null });
+      }
+    } catch (error) {
+      console.error('Error fetching user rating:', error.message);
+      return res.status(500).json({ message: 'Error al obtener la calificación del usuario.' });
+    }
+  }
+
+  // Handle request for full project details
   try {
     const [rows] = await pool.query(`${baseSelectQuery} WHERE p.id = ? GROUP BY p.id`, [id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Proyecto no encontrado' });
@@ -107,6 +137,67 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Error al obtener el proyecto' });
   }
 });
+
+// POST rate a project
+router.post('/:id/rate', auth, async (req, res) => {
+  const { id: proyecto_id } = req.params;
+  const { id: usuario_id } = req.user;
+  const { rating } = req.body;
+
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: 'La calificación debe ser un número entre 1 y 5.' });
+  }
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // 1. Insert or update the user's rating
+    await connection.query(
+      `INSERT INTO calificaciones (proyecto_id, usuario_id, calificacion)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE calificacion = ?`,
+      [proyecto_id, usuario_id, rating, rating]
+    );
+
+    // 2. Recalculate the average rating and count
+    const [stats] = await connection.query(
+      `SELECT AVG(calificacion) as avgRating, COUNT(id) as count
+       FROM calificaciones
+       WHERE proyecto_id = ?`,
+      [proyecto_id]
+    );
+
+    const { avgRating, count } = stats[0];
+
+    // 3. Update the projects table
+    await connection.query(
+      `UPDATE proyectos
+       SET calificacion_promedio = ?, cantidad_calificaciones = ?
+       WHERE id = ?`,
+      [avgRating, count, proyecto_id]
+    );
+
+    await connection.commit();
+    
+    await logAction(usuario_id, 'rate_project', { projectId: proyecto_id, rating });
+
+    res.json({
+      message: 'Calificación guardada exitosamente.',
+      averageRating: avgRating,
+      ratingCount: count
+    });
+
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Error rating project:', error.message);
+    res.status(500).json({ message: 'Error al guardar la calificación.', error: error.message });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 
 // POST create a new project
 router.post('/', auth, authorize(['admin']), upload, async (req, res) => {

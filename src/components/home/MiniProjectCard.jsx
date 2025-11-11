@@ -1,9 +1,11 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import { API_URL } from '../../services/api';
 
 export default function MiniProjectCard({ project }) {
   const { id, name, imageUrl, technologies } = project;
   const techs = technologies ? technologies.split(',').map(t => t.trim()).slice(0, 2) : [];
+  const API_BASE_URL = API_URL.replace('/api', '');
 
   return (
     <article className="mini-project-card bg-white rounded-2xl shadow-sm border border-border overflow-hidden transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-1">
@@ -11,7 +13,7 @@ export default function MiniProjectCard({ project }) {
         <div className="w-full h-32 bg-brand-50">
           {imageUrl && (
             <img 
-              src={imageUrl.startsWith('http') ? imageUrl : `https://meta-verso-carlos.b0falx.easypanel.host/${imageUrl}`} 
+              src={imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}${imageUrl}`} 
               alt={name} 
               className="w-full h-full object-cover" 
             />

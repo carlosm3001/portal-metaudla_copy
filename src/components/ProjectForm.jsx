@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "../services/api";
 
 import TechChipOption from './admin/TechChipOption';
 import TechChipSelected from './admin/TechChipSelected';
@@ -30,6 +31,8 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
   const [availableTechnologies, setAvailableTechnologies] = useState([]);
   const [selectedTechnologies, setSelectedTechnologies] = useState([]);
 
+  const API_BASE_URL = API_URL.replace('/api', '');
+
   useEffect(() => {
     if (project) {
       setName(project.name || project.nombre || "");
@@ -46,7 +49,7 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
   useEffect(() => {
     const fetchTechs = async () => {
       try {
-        const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/technologies');
+        const response = await fetch(`${API_URL}/technologies`);
         const data = await response.json();
         setAvailableTechnologies(data);
       } catch (error) {
@@ -121,7 +124,7 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
               <label className="label">Imagen Principal</label>
               {project?.imageUrl && (
                 <div className="mb-4">
-                  <img src={`http://localhost:3001${project.imageUrl}`} alt="Imagen Principal Actual" className="w-full h-auto object-cover rounded-lg border border-border" />
+                  <img src={`${API_BASE_URL}${project.imageUrl}`} alt="Imagen Principal Actual" className="w-full h-auto object-cover rounded-lg border border-border" />
                 </div>
               )}
               <input type="file" accept="image/*" className="input" name="projectImage" onChange={(e) => setMainImage(e.target.files?.[0] || null)} />
@@ -133,7 +136,7 @@ const ProjectForm = React.forwardRef(({ project, onSubmit, onCancel }, ref) => {
                 <div className="mb-4 grid grid-cols-3 gap-4">
                   {project.gallery.map(image => (
                     <div key={image.id}>
-                      <img src={`http://localhost:3001${image.imagenUrl}`} alt="Imagen de Galería" className="w-full h-auto object-cover rounded-lg border border-border" />
+                      <img src={`${API_BASE_URL}${image.imagenUrl}`} alt="Imagen de Galería" className="w-full h-auto object-cover rounded-lg border border-border" />
                     </div>
                   ))}
                 </div>

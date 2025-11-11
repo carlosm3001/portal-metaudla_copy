@@ -1,37 +1,39 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Users, Github, Globe, ThumbsUp } from 'lucide-react';
+import { Users, Github, Globe } from 'lucide-react';
 import Stars from '../components/Stars';
 import CommentForm from '../components/CommentForm';
 import { useAuth } from '../context/AuthContext';
 import * as api from '../services/api';
+import { API_URL } from '../services/api';
 
 export default function ProyectoDetalle() {
   const { id } = useParams();
-  const { user, isLoggedIn } = useAuth();
+  const { user, token, isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const [project, setProject] = useState(null);
   const [actions, setActions] = useState([]);
+  const [userRating, setUserRating] = useState(0); // User's specific rating
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isVoting, setIsVoting] = useState(false);
+  const [isRating, setIsRating] = useState(false);
+
+  const API_BASE_URL = API_URL.replace('/api', '');
 
   useEffect(() => {
     const fetchProjectData = async () => {
       try {
         setLoading(true);
-        const [projectRes, actionsRes] = await Promise.all([
-          fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${id}`), // Assuming this endpoint still exists to get main project data
-          api.listActions(id)
-        ]);
-
-        if (!projectRes.ok) throw new Error('No se pudo cargar el proyecto.');
-        
-        const projectData = await projectRes.json();
+        const projectData = await api.getProjectById(id);
         setProject(projectData);
-        setActions(actionsRes);
 
+        if (isLoggedIn) {
+          const ratingData = await api.getMyRating(id, token);
+          if (ratingData.rating) {
+            setUserRating(ratingData.rating);
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -40,30 +42,31 @@ export default function ProyectoDetalle() {
     };
 
     fetchProjectData();
-  }, [id]);
+  }, [id, isLoggedIn, token]);
 
-  const { comments, votes, voteCount, userHasVoted } = useMemo(() => {
+  const { comments } = useMemo(() => {
     const comments = actions.filter(a => a.type === 'comment');
-    const votes = actions.filter(a => a.type === 'vote');
-    const voteCount = votes.length;
-    const userHasVoted = user ? votes.some(v => v.authorId === user.id) : false;
-    return { comments, votes, voteCount, userHasVoted };
-  }, [actions, user]);
+    return { comments };
+  }, [actions]);
 
-  const handleVote = async () => {
+  const handleRating = async (newRating) => {
     if (!isLoggedIn) {
       return navigate(`/login`, { state: { from: `/projects/${id}` } });
     }
-    setIsVoting(true);
+    setIsRating(true);
     try {
-      const newVote = await api.addVote({ projectId: id, user });
-      // Add vote to local state for immediate feedback
-      setActions(currentActions => [...currentActions, newVote]);
+      const result = await api.rateProject(id, newRating, token);
+      setProject(prev => ({
+        ...prev,
+        averageRating: result.averageRating,
+        ratingCount: result.ratingCount,
+      }));
+      setUserRating(newRating); // Update user's rating locally
     } catch (error) {
-      console.error("Failed to vote:", error);
-      alert("Error al registrar el voto.");
+      console.error("Failed to rate:", error);
+      alert("Error al registrar la calificación.");
     } finally {
-      setIsVoting(false);
+      setIsRating(false);
     }
   };
 
@@ -94,31 +97,36 @@ export default function ProyectoDetalle() {
           <div className="card p-6 sm:p-8">
             <p className="text-brand-600 font-semibold">{project.category}</p>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-ink mt-1">{project.name}</h1>
+            <div className="flex items-center gap-2 mt-2">
+              <Stars rating={project.averageRating} />
+              <span className="text-sm text-muted">({project.ratingCount} calificaciones)</span>
+            </div>
             <p className="text-muted mt-3 text-base">{project.description}</p>
-                          <div className="mt-6">
-                            <img
-                              src={project.imageUrl ? `http://localhost:3001${project.imageUrl}` : 'https://placehold.co/800x500/8aa2f0/1f2937?text=Sin+Imagen'}
-                              alt={project.name}
-                              className="w-full h-auto object-cover rounded-xl border border-border"
-                            />
-                          </div>
+            <div className="mt-6">
+              <img
+                src={project.imageUrl ? `${API_BASE_URL}${project.imageUrl}` : 'https://placehold.co/800x500/8aa2f0/1f2937?text=Sin+Imagen'}
+                alt={project.name}
+                className="w-full h-auto object-cover rounded-xl border border-border"
+              />
+            </div>
             
-                          {project.gallery && project.gallery.length > 0 && (
-                            <div className="mt-6">
-                              <h2 className="text-2xl font-bold tracking-tight text-ink">Galería</h2>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                                {project.gallery.map(image => (
-                                  <a key={image.id} href={`http://localhost:3001${image.imagenUrl}`} target="_blank" rel="noopener noreferrer">
-                                    <img
-                                      src={`http://localhost:3001${image.imagenUrl}`}
-                                      alt={project.name}
-                                      className="w-full h-auto object-cover rounded-lg border border-border"
-                                    />
-                                  </a>
-                                ))}
-                              </div>
-                            </div>
-                          )}          </div>
+            {project.gallery && project.gallery.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-2xl font-bold tracking-tight text-ink">Galería</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                  {project.gallery.map(image => (
+                    <a key={image.id} href={`${API_BASE_URL}${image.imagenUrl}`} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={`${API_BASE_URL}${image.imagenUrl}`}
+                        alt={project.name}
+                        className="w-full h-auto object-cover rounded-lg border border-border"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="card p-6 sm:p-8 comments-section">
             <h2 className="h-title text-2xl">Comentarios</h2>
@@ -145,12 +153,18 @@ export default function ProyectoDetalle() {
         <aside className="md:col-span-1">
           <div className="card p-5 space-y-6 sticky top-24 sidebar">
             <div className="space-y-3">
-              <h4 className="font-bold text-lg">Votar por este proyecto</h4>
-              <button onClick={handleVote} disabled={isVoting || userHasVoted} className="btn btn-primary w-full">
-                <ThumbsUp className="w-4 h-4" /> 
-                {userHasVoted ? 'Ya votaste' : 'Apoyar este proyecto'}
-              </button>
-              <p className="text-sm text-muted text-center">{voteCount} personas han apoyado este proyecto.</p>
+              <h4 className="font-bold text-lg">Califica este proyecto</h4>
+              <div className="flex justify-center">
+                <Stars 
+                  rating={project.averageRating} 
+                  userRating={userRating}
+                  onRate={handleRating} 
+                  interactive={isLoggedIn} 
+                />
+              </div>
+              <p className="text-sm text-muted text-center">
+                {isLoggedIn ? (userRating > 0 ? 'Has calificado este proyecto.' : 'Haz clic en las estrellas para calificar.') : <LoginPrompt actionText="calificar" />}
+              </p>
             </div>
 
             {(project.githubUrl || project.websiteUrl) && (

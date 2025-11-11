@@ -1,17 +1,18 @@
 import React from 'react';
+import { API_URL } from '../../services/api';
 
 export default function ProjectCard({ project, onEdit, onDelete }) {
   const { id, name, description, technologies, votes = 0 } = project;
   const techs = technologies ? technologies.split(',').map(t => t.trim()) : [];
+  const API_BASE_URL = API_URL.replace('/api', '');
 
   return (
     <article className="card h-full flex flex-col overflow-hidden project-card">
       <div className="relative">
         {project.imageUrl ? (
           <>
-            {console.log('Rendering image for project:', project.name, 'imageUrl:', project.imageUrl, 'Type:', typeof project.imageUrl, 'Is Truthy:', !!project.imageUrl)}
             <img
-              src={project.imageUrl.startsWith('http') ? project.imageUrl : `http://localhost:3001${project.imageUrl}`}
+              src={project.imageUrl.startsWith('http') ? project.imageUrl : `${API_BASE_URL}${project.imageUrl}`}
               alt={project.name}
               className="w-full object-cover"
               style={{ aspectRatio: "4 / 3" }}

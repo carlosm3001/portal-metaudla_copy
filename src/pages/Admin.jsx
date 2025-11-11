@@ -2,13 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
-import ProjectCard from '../components/admin/ProjectCard'; // Renamed to avoid conflict with ProjectCardFlip
+import ProjectCard from '../components/admin/ProjectCard';
 import AdminHeader from "../components/admin/AdminHeader";
 import AdminTabs from "../components/admin/AdminTabs";
 import AdminCard from "../components/admin/AdminCard";
 import AdminTable from "../components/admin/AdminTable";
 
-// Unified services (assuming these exist and are correctly implemented)
+// API services
+import { 
+  getProjects, 
+  createProject,
+  updateProject, 
+  deleteProject, 
+  API_URL 
+} from '../services/api';
 import { listUsersUnified, setUserRoleUnified, toggleUserActiveUnified } from "../services/users.unified";
 import { listLogsUnified, formatDateSafe, actionBadge, actionIcon } from "../services/activityLog.unified";
 import { extractEmailFromDetails, formatAuditDate } from "../utils/audit.jsx";
@@ -67,13 +74,11 @@ function Admin({ isLoggedIn, userRole }) {
   const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/projects', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
+      const data = await getProjects();
       setProjects(data);
     } catch (err) { setError('Error al cargar proyectos.'); }
     finally { setLoading(false); }
-  }, [token]);
+  }, []);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -87,7 +92,7 @@ function Admin({ isLoggedIn, userRole }) {
   const fetchNews = useCallback(async () => {
     try {
       setNewsLoading(true);
-      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/news', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${API_URL}/news`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setNews(data);
@@ -104,7 +109,7 @@ function Admin({ isLoggedIn, userRole }) {
 
   const fetchProjectRequests = useCallback(async () => {
     try {
-      const response = await fetch('https://meta-verso-carlos.b0falx.easypanel.host/api/solicitudes', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${API_URL}/solicitudes`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setProjectRequests(data);
@@ -169,12 +174,12 @@ function Admin({ isLoggedIn, userRole }) {
   // Action handlers
   const handleSaveProject = async (formData) => {
     try {
-      const method = formData.get('id') ? 'PUT' : 'POST';
-      const url = formData.get('id')
-        ? `https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${formData.get('id')}`
-        : 'https://meta-verso-carlos.b0falx.easypanel.host/api/projects';
-      const response = await fetch(url, { method, headers: { 'Authorization': `Bearer ${token}` }, body: formData });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const projectId = formData.get('id');
+      if (projectId) {
+        await updateProject(projectId, formData, token);
+      } else {
+        await createProject(formData, token);
+      }
       setIsProjectModalOpen(false);
       fetchProjects();
       fetchLogs();
@@ -184,7 +189,7 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteProject = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
       try {
-        await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await deleteProject(id, token);
         fetchProjects();
         fetchLogs();
       } catch (err) { setError('Error al eliminar el proyecto.'); }
@@ -200,8 +205,8 @@ function Admin({ isLoggedIn, userRole }) {
     try {
       const method = formData.get('id') ? 'PUT' : 'POST';
       const url = formData.get('id')
-        ? `https://meta-verso-carlos.b0falx.easypanel.host/api/news/${formData.get('id')}`
-        : 'https://meta-verso-carlos.b0falx.easypanel.host/api/news';
+        ? `${API_URL}/news/${formData.get('id')}`
+        : `${API_URL}/news`;
       const response = await fetch(url, { 
         method, 
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
@@ -222,7 +227,7 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteNews = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
       try {
-        await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/news/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`${API_URL}/news/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         fetchNews();
         fetchLogs();
       } catch (err) { setNewsError('Error al eliminar la noticia.'); }
@@ -232,7 +237,7 @@ function Admin({ isLoggedIn, userRole }) {
   const handleDeleteUser = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`${API_URL}/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         fetchUsers();
         fetchLogs();
       } catch (err) { setUsersError('Error al eliminar el usuario.'); }
@@ -241,7 +246,7 @@ function Admin({ isLoggedIn, userRole }) {
 
   const handleRequestUpdate = async (id, estado) => {
     try {
-      await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/solicitudes/${id}`, { 
+      await fetch(`${API_URL}/solicitudes/${id}`, { 
         method: 'PUT', 
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ estado })
@@ -253,7 +258,7 @@ function Admin({ isLoggedIn, userRole }) {
 
   const handleViewRequest = async (id) => {
     try {
-      const response = await fetch(`https://meta-verso-carlos.b0falx.easypanel.host/api/solicitudes/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${API_URL}/solicitudes/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setViewingRequest(data);
@@ -591,7 +596,7 @@ function Admin({ isLoggedIn, userRole }) {
               {viewingRequest.imagenUrl && (
                 <div className="p-4 border rounded-lg bg-card">
                   <p className="font-semibold text-text mb-1">Imagen Principal:</p>
-                  <img src={`http://localhost:3001${viewingRequest.imagenUrl}`} alt="Imagen Principal" className="w-full h-48 object-cover rounded-lg mt-2 border border-slate-200" />
+                  <img src={`${API_URL.replace('/api', '')}${viewingRequest.imagenUrl}`} alt="Imagen Principal" className="w-full h-48 object-cover rounded-lg mt-2 border border-slate-200" />
                 </div>
               )}
               {viewingRequest.gallery && viewingRequest.gallery.length > 0 && (
@@ -600,7 +605,7 @@ function Admin({ isLoggedIn, userRole }) {
                   <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mt-2">
                     {viewingRequest.gallery.map((img, index) => (
                       <div key={index} className="w-full h-24 overflow-hidden rounded-lg border border-slate-200">
-                        <img src={`http://localhost:3001${img.imagenUrl}`} alt={`Galería ${index + 1}`} className="w-full h-full object-cover" />
+                        <img src={`${API_URL.replace('/api', '')}${img.imagenUrl}`} alt={`Galería ${index + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>
